@@ -2,7 +2,7 @@
 
 
 
-**Workflow**
+**Workflow:**
 
 ```mermaid
 graph TD
