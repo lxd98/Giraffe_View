@@ -18,4 +18,4 @@ Observed_accuracy --> Read_level
 Observed_accuracy --> Contigs/Chromsomes_level
 ```
 
-The update are available [here](https://github.com/lrslab/Giraffe_View).
+The update is available [here](https://github.com/lrslab/Giraffe_View).
