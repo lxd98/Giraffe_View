@@ -17,3 +17,5 @@ aligned_file --> Observed_accuracy
 Observed_accuracy --> Read_level
 Observed_accuracy --> Contigs/Chromsomes_level
 ```
+
+The update are available here.
