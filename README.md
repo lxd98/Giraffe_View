@@ -14,8 +14,12 @@
 To use this software, you will need to install additional dependencies including samtools, minimap2, seqkit, pysam, numpy, and pandas. You can install these dependencies using the following command.
 
 ```shell
+# for data processing
 pip install rpy2==3.0 pysam numpy pandas
-conda install -c bioconda -c conda-forge samtools minimap2 seqkit -y
+conda install -c bioconda -c conda-forge samtools minimap2 seqkit bedtools -y
+
+# for figure plotting
+conda install -c R ggplot2 patchwork -y
 ```
 
 
