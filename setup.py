@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
   name="Giraffe_View",
-  version="0.0.3",
+  version="0.0.8",
   author="Xudong Liu",
   author_email="xudongliu98@gmail.com",
   description="A small tool help assess and visualize the accuracy of a sequencing dataset, \
@@ -27,5 +27,5 @@ setuptools.setup(
   'pandas == 2.0.3',
   'tqdm == 4.64.0'
   ],
-  scripts = ["Giraffe_View/Giraffe_View.py"]
+  scripts = ["Giraffe_View/Giraffe"]
 )

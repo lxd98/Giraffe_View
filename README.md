@@ -11,15 +11,15 @@
 
 ## Install
 
-To use this software, you will need to install additional dependencies including samtools, minimap2, seqkit, pysam, numpy, and pandas. You can install these dependencies using the following command.
+To use this software, you need to install additional dependencies including samtools, minimap2, and seqkit for read processing and ggplot2 and patchwork for figure plotting.
+
+The following commands can help you to install the package  and dependencies.
 
 ```shell
-# for data processing
-pip install rpy2==3.0 pysam numpy pandas
-conda install -c bioconda -c conda-forge samtools minimap2 seqkit bedtools -y
+pip install Giraffe-View
 
-# for figure plotting
-conda install -c R ggplot2 patchwork -y
+conda install -c bioconda -c conda-forge samtools minimap2 seqkit bedtools -y
+conda install -c conda-forge r-ggplot2 r-patchwork -y
 ```
 
 
@@ -29,11 +29,11 @@ conda install -c R ggplot2 patchwork -y
 Giraffe View is run simply with fllowing commands:
 
 ```shell
-python Giraffe_View.py --help
+Giraffe -h
 ```
 
 ```shell
-usage: Giraffe_view [-h] {observe,modi,GC_bias,estimate} ...
+usage: Giraffe [-h] {observe,modi,GC_bias,estimate} ...
 
 A tool to help you assess quality of your ONT data.
 
@@ -55,11 +55,11 @@ The available sub-commands are:
 ### observe
 
 ```shell
-python Giraffe_View.py observe --help
+Giraffe observe -h
 ```
 
 ```xshell
-usage: Giraffe_view observe [-h] --input <fastq> --ref <reference> [--cpu <number>]
+usage: Giraffe observe [-h] --input <fastq> --ref <reference> [--cpu <number>]
 
 optional arguments:
   -h, --help         show this help message and exit
@@ -77,11 +77,11 @@ optional arguments:
 ### estimate  
 
 ```shell
-python Giraffe_View.py estimate --help
+Giraffe estimate -h
 ```
 
 ```shell
-usage: Giraffe_view estimate [-h] --input <fastq> [--cpu <number>]
+usage: Giraffe estimate [-h] --input <fastq> [--cpu <number>]
 
 optional arguments:
   -h, --help       show this help message and exit
@@ -94,11 +94,11 @@ optional arguments:
 ### GC_bias
 
 ```shell
-python Giraffe_View.py GC_bias --help
+Giraffe GC_bias -h
 ```
 
 ```shell
-usage: Giraffe_view GC_bias [-h] --ref <reference> --input <sam/bam> [--binsize]
+usage: Giraffe GC_bias [-h] --ref <reference> --input <sam/bam> [--binsize]
 
 optional arguments:
   -h, --help         show this help message and exit
@@ -116,11 +116,11 @@ optional arguments:
 ### modi
 
 ```shell
-python Giraffe_View.py modi --help
+Giraffe modi -h
 ```
 
 ```shell
-usage: Giraffe_view modi [-h] --input <bed> --ref <reference> [--cpu <number>]
+usage: Giraffe modi [-h] --input <bed> --ref <reference> [--cpu <number>]
 
 optional arguments:
   -h, --help         show this help message and exit
