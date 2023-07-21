@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
   name="Giraffe_View",
-  version="0.0.8",
+  version="0.0.9.4",
   author="Xudong Liu",
   author_email="xudongliu98@gmail.com",
   description="A small tool help assess and visualize the accuracy of a sequencing dataset, \
@@ -21,11 +21,11 @@ setuptools.setup(
   ],
   python_requires = '>=3.7, <=3.10',
   install_requires=[
-  'pysam == 0.21.0',
-  'rpy2==3.0',
-  'numpy == 1.25.1',
-  'pandas == 2.0.3',
+  'pysam >= 0.17.0',
+  'plotnine >= 0.12.1',
+  'numpy >= 1.7.0',
+  'pandas >= 1.5.0',
   'tqdm == 4.64.0'
   ],
-  scripts = ["Giraffe_View/Giraffe"]
+  scripts = ["Giraffe_View/giraffe"]
 )
