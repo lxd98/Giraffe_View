@@ -4,22 +4,20 @@
 
 - `observe`  calculates the observed read accuracy, mismatches porportion, and homopolymer identification.
 - `estimate`  calculates the estimated read accuracy, which is equal to Quality Score.
-- `GC_bias`  compares the relationship between GC content and read coverage.
+- `gc_bias`  compares the relationship between GC content and read coverage.
 - `modi` perform statistics on the distribution of modification based on the bed file.
 
 
 
 ## Install
 
-To use this software, you need to install additional dependencies including samtools, minimap2, and seqkit for read processing and ggplot2 and patchwork for figure plotting.
+To use this software, you need to install additional dependencies including samtools, minimap2,  seqkit, and bedtools for read processing.
 
 The following commands can help you to install the package  and dependencies.
 
 ```shell
 pip install Giraffe-View
-
 conda install -c bioconda -c conda-forge samtools minimap2 seqkit bedtools -y
-conda install -c conda-forge r-ggplot2 r-patchwork -y
 ```
 
 
@@ -29,20 +27,20 @@ conda install -c conda-forge r-ggplot2 r-patchwork -y
 Giraffe View is run simply with fllowing commands:
 
 ```shell
-Giraffe -h
+giraffe -h
 ```
 
-```shell
-usage: Giraffe [-h] {observe,modi,GC_bias,estimate} ...
+```
+usage: giraffe [-h] {observe,estimate,modi,gc_bias} ...
 
-A tool to help you assess quality of your ONT data.
+A tool to help you assess quality of ONT data.
 
 positional arguments:
-  {observe,modi,GC_bias,estimate}
+  {observe,estimate,modi,gc_bias}
     observe             Observed quality in accuracy, mismatch, and homopolymer
-    modi                Average modification proportion of regions
-    GC_bias             Relationship between GC content and depth
     estimate            Estimated read accuracy
+    modi                Average modification proportion of regions
+    gc_bias             Relationship between GC content and depth
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -55,17 +53,18 @@ The available sub-commands are:
 ### observe
 
 ```shell
-Giraffe observe -h
+giraffe observe -h
 ```
 
-```xshell
-usage: Giraffe observe [-h] --input <fastq> --ref <reference> [--cpu <number>]
+```
+usage: giraffe observe [-h] --input <fastq> --ref <reference> [--cpu <number>] [--plot]
 
 optional arguments:
   -h, --help         show this help message and exit
   --input <fastq>    input reads
   --ref <reference>  input reference
   --cpu <number>     number of cpu (default:10)
+  --plot             Results visualization
 ```
 
 - `fastq` - the raw fastq data, some filter steps will be conducted including short read ( < 200 bp) and low quality read ( < 7 ) removal.
@@ -77,34 +76,36 @@ optional arguments:
 ### estimate  
 
 ```shell
-Giraffe estimate -h
+giraffe estimate -h
 ```
 
-```shell
-usage: Giraffe estimate [-h] --input <fastq> [--cpu <number>]
+```
+usage: giraffe estimate [-h] --input <fastq> [--cpu <number>] [--plot]
 
 optional arguments:
   -h, --help       show this help message and exit
   --input <fastq>  input reads
   --cpu <number>   number of cpu (default:10)
+  --plot           Results visualization
 ```
 
 
 
-### GC_bias
+### gc_bias
 
 ```shell
-Giraffe GC_bias -h
+giraffe gc_bias -h
 ```
 
-```shell
-usage: Giraffe GC_bias [-h] --ref <reference> --input <sam/bam> [--binsize]
+```
+usage: giraffe gc_bias [-h] --ref <reference> --input <sam/bam> [--binsize] [--plot]
 
 optional arguments:
   -h, --help         show this help message and exit
   --ref <reference>  input reference file
   --input <sam/bam>  input bam/sam file
   --binsize          input bin size (default:1000)
+  --plot             Results visualization
 ```
 
 - `reference` - the reference file in fasta format.
@@ -116,11 +117,11 @@ optional arguments:
 ### modi
 
 ```shell
-Giraffe modi -h
+giraffe modi -h
 ```
 
-```shell
-usage: Giraffe modi [-h] --input <bed> --ref <reference> [--cpu <number>]
+```
+usage: giraffe modi [-h] --input <bed> --ref <reference> [--cpu <number>]
 
 optional arguments:
   -h, --help         show this help message and exit
@@ -167,4 +168,4 @@ aligned_file --> Observed_accuracy
 
 - A example to show how to run
 - polish the result figures
-- run the homopolymer identification with multi-processes
+- run the homopolymer identification with multi-processed
