@@ -1,0 +1,103 @@
+#!/usr/bin/env python
+import sys
+import argparse
+from Giraffe_View.function import *
+from Giraffe_View.homopolymer import *
+from Giraffe_View.observed_read_accuracy import *
+from Giraffe_View.gc_bias import *
+from Giraffe_View.estimated_read_accuracy import *
+from Giraffe_View.regional_modification import *
+from Giraffe_View.plot import *
+
+def observed(args):
+    Data_process(args.input, args.ref, args.cpu)
+    print("Start observed accuracy analysis!")
+    observed_accuracy("results/quality/tmp.sort.bam")
+    print("Start homopolymer identification!")
+
+    homopolymer_from_bam("results/quality/tmp.sort.bam")
+    homopolymer_summary_1("results/quality/homo.txt")
+    homopolymer_summary_2()
+    
+    if args.plot:
+        print("Start plotting!")
+        plot_observe()
+        print("Analysis finished!")
+    else:
+        print("Analysis finished!")
+
+
+def methylation(args):
+    mkdir_d("regional_modification")
+    methylation_calculation(args.input, args.ref, args.cpu)
+
+
+def GC_bias(args):
+    mkdir_d("GC_bias")
+    compute_GC_bias(args.ref, args.input, args.binsize)
+    merge_CG_content_and_depth(args.binsize)
+
+    if args.plot:
+        print("Start plotting!")
+        plot_GC_bias()
+        print("Analysis finished!")
+    else:
+        print("Analysis finished!")
+
+def estimated(args):
+    mkdir_d("estimated")
+    calculate_estimated_accuracy(args.input, args.cpu)
+    
+    if args.plot:
+        print("Start plotting!")
+        plot_estimate()
+        print("Analysis finished!")
+    else:
+        print("Analysis finished!")
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(prog="giraffe", description="A tool to help you assess quality of ONT data.")
+
+    # Define subparsers
+    subparsers = parser.add_subparsers(dest='function', help="")
+    observed_parser = subparsers.add_parser('observe', help='Observed quality in accuracy, mismatch, and homopolymer')
+    observed_parser.add_argument("--input", type=str, metavar="<fastq>", required=True, help="input reads")
+    observed_parser.add_argument("--ref", type=str, metavar="<reference>", required=True, help="input reference")
+    observed_parser.add_argument("--cpu", type=int, metavar="<number>", required=False, help="number of cpu (default:10)", default=10)
+    observed_parser.add_argument("--plot", required=False, help="Results visualization", action='store_true')
+
+    estimated_parser = subparsers.add_parser('estimate', help='Estimated read accuracy')
+    estimated_parser.add_argument("--input", type=str, metavar="<fastq>", required=True, help="input reads")
+    estimated_parser.add_argument("--cpu", type=int, metavar="<number>", required=False, help="number of cpu (default:10)", default=10)
+    estimated_parser.add_argument("--plot", required=False, help="Results visualization", action='store_true')
+
+    methylation_parser = subparsers.add_parser('modi', help='Average modification proportion of regions')
+    methylation_parser.add_argument("--input", type=str, metavar="<bed>", required=True, help="input bed file")
+    methylation_parser.add_argument("--ref", type=str, metavar="<reference>", required=True, help="input reference")
+    methylation_parser.add_argument("--cpu", type=int, metavar="<number>", required=False, help="number of cpu (default:10)", default=10)
+
+    GC_bias_parser = subparsers.add_parser('gc_bias', help='Relationship between GC content and depth')
+    GC_bias_parser.add_argument("--ref", type=str, metavar="<reference>", required=True, help="input reference file")
+    GC_bias_parser.add_argument("--input", type=str, metavar="<sam/bam>", required=True, help="input bam/sam file")
+    GC_bias_parser.add_argument("--binsize", type=int, metavar="", required=False, help="input bin size (default:1000)", default=1000)
+    GC_bias_parser.add_argument("--plot", required=False, help="Results visualization", action='store_true')
+
+    # Add function to print help if no arguments are provided
+    if len(sys.argv) == 1:
+        parser.print_help(sys.stderr)
+        sys.exit(1)
+
+    args = parser.parse_args()
+
+    # Call the appropriate function based on the subparser used
+    if args.function == "observe":
+        observed(args)
+
+    elif args.function == "modi":
+        methylation(args)
+
+    elif args.function == "gc_bias":
+        GC_bias(args)
+
+    elif args.function == "estimate":
+        estimated(args)
