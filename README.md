@@ -178,8 +178,6 @@ results/
 
 
 
-> The demo figure for estimated read accuracy:
-
 >![alt text](example/demo/estimated_read_accuracy.png)
 
 
@@ -208,19 +206,19 @@ results/
 
 
 
->The demo figure for observed read accuracy:
->
 >![alt text](example/demo/Observed_read_accuracy.png)
 
 
 
->The demo figure for observed mismatched rate:
->
+
+
 >![alt text](example/demo/Observed_mismatch_proportion.png)
 
 
 
->The demo figure for homopolymer identification accuracy:![alt text](example/demo/Observed_homopolymer_identification.png)
+
+
+>![alt text](example/demo/Observed_homopolymer_identification.png)
 
 
 
@@ -243,14 +241,14 @@ results/
 
 
 
->The demo figure for distribution of BINs' GC content :
->
+
+
 >![alt text](example/demo/bin_distribution.png)
 
 
 
->The demo figure for relationship between normalized sequencing depth and GC content:
->
+
+
 >![alt text](example/demo/GC_bias.png)
 
 
@@ -266,13 +264,17 @@ results/
 
 
 
->The demo figure for distribution of 5mC methylation porportion at promoter level:
->
+
+
 >![alt text](example/demo/motif_bin_violin.png)
 
 
 
+
+
 >![alt text](example/demo/motif_bin_box.png)
+
+
 
 
 
