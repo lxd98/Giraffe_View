@@ -199,6 +199,7 @@ results/
 `Observed_read_accuracy.pdf` - Visualization of observed read accuracy.
 
 >![alt text](example/demo/Observed_read_accuracy.png)
+>
 >![alt text](example/demo/Observed_mismatch_proportion.png)
 >![alt text](example/demo/Observed_homopolymer_identification.png)
 
