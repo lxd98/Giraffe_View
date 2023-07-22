@@ -5,7 +5,7 @@
 - `observe`  calculates the observed read accuracy, mismatches porportion, and homopolymer identification.
 - `estimate`  calculates the estimated read accuracy, which is equal to Quality Score.
 - `gcbias`  compares the relationship between GC content and read coverage.
-- `modibin` perform statistics on the distribution of modification based on the bed file.
+- `modibin` performs statistics on the distribution of modification based on the bed file.
 
 
 
