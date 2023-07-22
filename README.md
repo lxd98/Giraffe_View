@@ -9,7 +9,7 @@
 
 
 
-## Install
+## Installation
 
 To use this software, you need to install additional dependencies including samtools, minimap2, seqkit, and bedtools for read processing. The following commands can help you to install the package  and dependencies.
 
