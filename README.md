@@ -173,10 +173,7 @@ results/
 
 `estimated_read_accuracy.pdf` -  Visualization of estimated read accuracy.
 
-
-
 ![alt text](example/estimated_read_accuracy.png)
-
 
 
 ### observed_quality
@@ -200,6 +197,11 @@ results/
 `Observed_mismatch_proportion.pdf` - Visualization of mismatch proportion.
 
 `Observed_read_accuracy.pdf` - Visualization of observed read accuracy.
+
+![alt text](example/Observed_read_accuracy.png)
+![alt text](example/Observed_mismatch_proportion.png)
+![alt text](example/Observed_homopolymer_identification.png)
+
 
 
 
