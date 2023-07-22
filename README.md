@@ -221,6 +221,8 @@ results/
 
 `GC_bias.pdf` - Visualization of relationship between normalized depth and GC content.
 
+![alt text](example/bin_distribution.png)
+![alt text](example/GC_bias.png)
 
 
 ### regional_modification
