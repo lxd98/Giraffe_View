@@ -173,7 +173,7 @@ results/
 
 `estimated_read_accuracy.pdf` -  Visualization of estimated read accuracy.
 
-！[alt text](example/estimated_read_accuracy.png)
+！[alt	text](example/estimated_read_accuracy.png)
 
 
 ### observed_quality
