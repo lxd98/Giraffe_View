@@ -1,8 +1,14 @@
 import subprocess
 import re
 import os
+from termcolor import colored
 from subprocess import Popen, PIPE
 
+def print_with_color(input_string):
+    print(colored(input_string, "green"))
+
+def error_with_color(input_string):
+    print(colored(input_string, "red"))
 
 def cmd_shell(cammands, string):
     process = Popen(cammands.split(' '), stdout=subprocess.DEVNULL, universal_newlines=True)
@@ -10,28 +16,29 @@ def cmd_shell(cammands, string):
     err = process.communicate()
 
     if process.returncode == 0:
-        print('{} SUCCESS'.format(string))
+        # print('{} SUCCESS'.format(string))
+        pass
     else:
-        print('{} FAILED'.format(string))
-        print(err)
+        # print('{} FAILED'.format(string))
+        error_with_color(err)
 
 def Data_process(read, ref, threads=10):
     # Define the commands as a list of strings to avoid issues with spaces
     # in file names or command arguments
     # path =  os.getcwd()
-    cmd0 = ["mkdir", "-p", "results/quality"]
-    cmd1 = ["seqkit", "seq", read, "-m", "200", "-Q", "7", "-g", "-j", str(threads), "-o", "results/quality/clean.fastq"]
-    cmd2 = ["minimap2", "-ax", "map-ont", "-o", "results/quality/tmp.sam", "--MD", "--secondary=no", "-L", "-t", str(threads), ref, "results/quality/clean.fastq"]
-    cmd3 = ["samtools", "view", "-bS", "-F4", "-@", str(threads), "-o", "results/quality/tmp.bam", "results/quality/tmp.sam"]
-    cmd4 = ["samtools", "sort", "-@", str(threads), "-o", "results/quality/tmp.sort.bam", "results/quality/tmp.bam"]
-    cmd5 = ["samtools", "index", "-@", str(threads), "results/quality/tmp.sort.bam"]
-    cmd6 = ["rm", "-rf", "results/quality/tmp.sam", "results/quality/tmp.bam"]
+    cmd0 = ["mkdir", "-p", "results/observed_quality"]
+    cmd1 = ["seqkit", "seq", read, "-m", "200", "-Q", "7", "-g", "-j", str(threads), "-o", "results/observed_quality/clean.fastq"]
+    cmd2 = ["minimap2", "-ax", "map-ont", "-o", "results/observed_quality/tmp.sam", "--MD", "--secondary=no", "-L", "-t", str(threads), ref, "results/observed_quality/clean.fastq"]
+    cmd3 = ["samtools", "view", "-bS", "-F4", "-@", str(threads), "-o", "results/observed_quality/tmp.bam", "results/observed_quality/tmp.sam"]
+    cmd4 = ["samtools", "sort", "-@", str(threads), "-o", "results/observed_quality/tmp.sort.bam", "results/observed_quality/tmp.bam"]
+    cmd5 = ["samtools", "index", "-@", str(threads), "results/observed_quality/tmp.sort.bam"]
+    cmd6 = ["rm", "-rf", "results/observed_quality/tmp.sam", "results/observed_quality/tmp.bam"]
 
     # Run each command and check the return code
     for i, cmd in enumerate([cmd0, cmd1, cmd2, cmd3, cmd4, cmd5, cmd6]):
         try:
             subprocess.run(cmd, check=True)
-            print("Command {} succeeded".format(i + 1))
+            # print("Command {} succeeded".format(i + 1))
         except subprocess.CalledProcessError as e:
             print("Command {} failed with error code {}".format(i + 1, e.returncode))
             print(e.output)
@@ -80,8 +87,6 @@ def remove_clip_list(input_cigar, input_pairs, input_ID):
         print(str(input_ID) + ", please recheck this CIGAR and MD!")
     return(valid_pairs)
 
-
-
 """
 only for base A T G C
 (read_position, ref_position, "ref_base")
@@ -104,8 +109,3 @@ def get_base_alignment(input_list):
             else:
                 result =  "S" # S = substitution
     return result
-
-
-# def Rplot(plotR):
-#     cmd = ["Rscript", str(plotR)]
-#     subprocess.run(cmd, check=True)

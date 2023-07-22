@@ -91,7 +91,7 @@ def merge_CG_content_and_depth(binsize):
 	df = pd.read_csv("results/GC_bias/GC_bias_raw.txt", delim_whitespace=True)
 	max_number = df["number"].max()
 	total_number = df["number"].sum()
-	porportion = 0.95
+	porportion = 0.90
 	tmp = df[df["number"] == max_number].copy()
 	
 	if len(tmp) == 1:

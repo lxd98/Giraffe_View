@@ -39,7 +39,7 @@ def manager(process_num, input_file, input_ref):
         inqueue.put("STOP")
 
     stop_count = 0
-    with tqdm(total=total, desc=input_file) as pbar, open(f"results/regional_modification/{input_file.replace('.bed', '')}_{input_ref.replace('.db', '')}.bed", "w") as of:
+    with tqdm(total=total, desc=input_file) as pbar, open(f"results/regional_modification/{input_file.replace('.bed', '')}_{input_ref.replace('.csv', '')}.bed", "w") as of:
         while stop_count < process_num:
             pbar.update()
             result = outqueue.get()

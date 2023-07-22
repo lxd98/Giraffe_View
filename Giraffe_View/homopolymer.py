@@ -1,9 +1,8 @@
 import pandas as pd
 import pysam
 import re
-from Giraffe_View.function import *
 import multiprocessing
-
+from Giraffe_View.function import *
 
 def homopolymer_from_bam(input_bamfile):
 	bamfile = pysam.AlignmentFile(input_bamfile, threads=4)
@@ -51,7 +50,7 @@ def homopolymer_from_bam(input_bamfile):
 						homoploymer_ref_pos.append(base[1])
 	bamfile.close()
 
-	ff = open("results/quality/homo.txt", "w")
+	ff = open("results/observed_quality/homo.txt", "w")
 	for read in dir_polymer.keys():
 		for n in dir_polymer[read].keys():
 			stat_info = count_indel_and_snv(str(dir_polymer[read][n][1]))
@@ -71,8 +70,6 @@ def homopolymer_from_bam(input_bamfile):
 			mes += str(read)
 			ff.write(mes + "\n")
 	ff.close()
-
-
 
 def homopolymer_summary_1(input_file):
 	data = {}
@@ -97,7 +94,7 @@ def homopolymer_summary_1(input_file):
 					data[position]["mat"] += 1
 	ff.close()
 
-	ff = open("results/quality/homo_tmp.txt", "w")
+	ff = open("results/observed_quality/homo_tmp.txt", "w")
 	ff.write("pos\tnum_of_mat\tdepth\ttype\n")   
 
 	for i in data.keys():
@@ -105,13 +102,12 @@ def homopolymer_summary_1(input_file):
 		ff.write(mes + "\n")
 	ff.close()
 
-
 def homopolymer_summary_2():
-	data = pd.read_table("results/quality/homo_tmp.txt", sep="\t")	
+	data = pd.read_table("results/observed_quality/homo_tmp.txt", sep="\t")	
 	valid = data[data["depth"] >= 3].copy()
 
 	if len(valid) != 0:
-		ff = open("results/quality/final_homo_summary.txt", "w")
+		ff = open("results/observed_quality/final_homo_summary.txt", "w")
 		ff.write("base\tvalue\n")
 
 		valid["rate"] = valid["num_of_mat"] / valid["depth"]

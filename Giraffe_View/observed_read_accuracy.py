@@ -37,7 +37,7 @@ def observed_accuracy(bam_file):
     and identity rates for each read in a BAM file.
     """
     quality = {}
-    with open("results/quality/final_observed_accuracy.txt", "w") as outfile:  
+    with open("results/observed_quality/final_observed_accuracy.txt", "w") as outfile:  
         outfile.write("ID\tIns\tDel\tSub\tMat\tIden\tAcc\n")
 
         bamfile= pysam.AlignmentFile(bam_file, 'rb')

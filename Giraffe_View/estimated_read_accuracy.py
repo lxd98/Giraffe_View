@@ -5,10 +5,8 @@ import multiprocessing
 def calculate_read_accuracy(string):
     """
     Calculate the estimated accuracy for a given string.
-
     Parameters:
     string (str): A string of bases in ASCII format.
-
     Returns:
     list: A list containing the estimated accuracy, error proportion, and Q-value.
     """
@@ -23,10 +21,8 @@ def calculate_read_accuracy(string):
 def process_chunk(chunk):
     """
     Process a chunk of reads.
-
     Parameters:
     chunk (list): A list of reads.
-
     Returns:
     list: A list containing the estimated accuracy, error proportion, and Q-value for each read in the chunk.
     """
@@ -40,7 +36,6 @@ def process_chunk(chunk):
 def calculate_estimated_accuracy(input_file, num_processes, chunk_size=1000):
     """
     Calculate the estimated accuracy for each read in an input file and write the results to an output file.
-
     Parameters:
     input_file (str): The path to the input file.
     output_file (str): The path to the output file.
@@ -73,7 +68,7 @@ def calculate_estimated_accuracy(input_file, num_processes, chunk_size=1000):
     pool.close()
     pool.join()
 
-    output_file = open("results/estimated/final_estimated_accuracy.txt", "w")
+    output_file = open("results/estimated_quality/final_estimated_accuracy.txt", "w")
     # with open("result/estimated/estimated_accuracy.txt", "w") as output_file:
     output_file.write("ID\tacc\terror\tQ_value\n")
     for result in results:
