@@ -173,7 +173,7 @@ results/
 
 `estimated_read_accuracy.pdf` -  Visualization of estimated read accuracy.
 
-![alt text](example/demo/estimated_read_accuracy.png)
+>![alt text](example/demo/estimated_read_accuracy.png)
 
 
 ### observed_quality
@@ -198,9 +198,9 @@ results/
 
 `Observed_read_accuracy.pdf` - Visualization of observed read accuracy.
 
-![alt text](example/demo/Observed_read_accuracy.png)
-![alt text](example/demo/Observed_mismatch_proportion.png)
-![alt text](example/demo/Observed_homopolymer_identification.png)
+>![alt text](example/demo/Observed_read_accuracy.png)
+>![alt text](example/demo/Observed_mismatch_proportion.png)
+>![alt text](example/demo/Observed_homopolymer_identification.png)
 
 
 
@@ -221,8 +221,8 @@ results/
 
 `GC_bias.pdf` - Visualization of relationship between normalized depth and GC content.
 
-![alt text](example/demo/bin_distribution.png)
-![alt text](example/demo/GC_bias.png)
+>![alt text](example/demo/bin_distribution.png)
+>![alt text](example/demo/GC_bias.png)
 
 
 ### regional_modification
@@ -233,8 +233,8 @@ results/
 
 `motif_bin_box.pdf` - Box plot of  modification proportion.
 
-![alt text](example/demo/motif_bin_violin.png)
-![alt text](example/demo/motif_bin_box.png)
+>![alt text](example/demo/motif_bin_violin.png)
+>![alt text](example/demo/motif_bin_box.png)
 
 
 ## Workflow
