@@ -178,7 +178,7 @@ results/
 
 ### observed_quality
 
-`clean.fastq` - Cleaned reads after some filter steps including short read ( < 200 bp) and low quality read ( < 7 ) removal.
+`clean.fastq` - Clean reads after some filter steps including short read ( < 200 bp) and low quality read ( < 7 ) removal.
 
 `tmp.sort.bam` - Aligned BAM file using clean reads against reference. 
 
