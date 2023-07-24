@@ -3,6 +3,9 @@ import pandas as pd
 import numpy as np
 import warnings
 
+from matplotlib import pyplot as plt
+plt.rcParams['pdf.fonttype'] = 42
+
 warnings.filterwarnings('ignore')
 
 def plot_observe_acc():
