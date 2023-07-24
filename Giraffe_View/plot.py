@@ -234,3 +234,56 @@ def plot_modi_bin(INPUT, REF):
 
 	Bin_violin.save(filename = "motif_bin_violin.pdf", 
 		width=8, height=6, dpi=300, path="results/regional_modification/")
+# from zhguo
+# input dict example:
+# {'IVT_positive': '/t1/zhguo/Data/Ecoli_RNA/Ecoli_ivt_positive/results/observed_quality/final_observed_accuracy.txt'}
+# output_path should be a pdf 
+import plotnine as p9
+def draw_observed_feature(input_dict,output_path):
+    df=pd.DataFrame()
+    for key, value in input_dict.items():
+        input_df = pd.read_csv(value,sep='\t')
+        input_df['Samples'] = key
+        df = pd.concat([df, input_df],ignore_index=True)
+    # Calculating ratio
+    df["p_ins"] = 100 * df["Ins"] / (df["Ins"] + df["Del"] + df["Sub"] + df["Mat"])
+    df["p_del"] = 100 * df["Del"] / (df["Ins"] + df["Del"] + df["Sub"] + df["Mat"])
+    df["p_sub"] = 100 * df["Sub"] / (df["Ins"] + df["Del"] + df["Sub"] + df["Mat"])
+    df['Acc'] = 100 * df['Acc']
+    df['Iden'] = 100 * df['Iden']
+    new_df = df[["p_ins",'p_del','p_sub','Iden',"Acc",'Samples']]
+    new_df.columns = ['Insertion','Deletion','Substitution','Identity',"Accuracy","Samples"]
+    grouped = new_df.groupby('Samples')
+
+    # Melt and add sample info
+    df=pd.DataFrame()
+    for group in grouped:
+        temp=group[1]
+        temp=temp[['Insertion','Deletion','Substitution','Identity',"Accuracy"]].melt()
+        temp["Samples"]=group[0]
+        df = pd.concat([df, temp], ignore_index=True)
+    # sample_sum = df.groupby('Samples')['acc'].mean().reset_index()
+    # Plot
+    category_data=["Accuracy",'Identity','Insertion','Deletion','Substitution']
+    category = pd.api.types.CategoricalDtype(categories=category_data, ordered=True)
+    df['variable'] = df['variable'].astype(category)
+
+    plot = p9.ggplot(df, p9.aes(x='Samples', y="value",fill='Samples')) \
+           + p9.theme_bw() \
+           + p9.scale_fill_manual(values=[ '#d8ecec','#ffc2d1', '#ffd988', '#ffc6b1'])\
+           + p9.theme(
+        figure_size=(25, 6),
+        panel_grid_minor=p9.element_blank(),
+        axis_text=p9.element_text(size=10),
+        axis_title=p9.element_text(size=10),
+        title=p9.element_text(size=13),
+        strip_text=p9.element_text(size=10),
+        legend_position='none',
+        strip_background=p9.element_rect(alpha=0)
+    )\
+        + p9.facet_wrap('~ variable', scales='free_y', ncol=5)
+    plot = plot + p9.geom_violin(color='none', width=1)
+    plot = plot + p9.geom_boxplot(outlier_shape='', width=0.1)
+    # result_df.to_csv("/t1/zhguo/Data/Ecoli_RNA/count_information/Q_value.csv",index=None)
+    plot.save(output_path,dpi=300)
+    print(plot)
