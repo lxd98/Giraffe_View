@@ -75,3 +75,4 @@ def calculate_estimated_accuracy(input_file, num_processes, chunk_size=1000):
         for line in result.get():
             message = f"{line[0]}\t{line[1]}\t{line[2]}\t{line[3]}"
             output_file.write(message + "\n")
+    output_file.close()
