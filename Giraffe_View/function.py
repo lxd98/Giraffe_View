@@ -27,7 +27,7 @@ def Data_process(read, ref, threads=10):
     # in file names or command arguments
     # path =  os.getcwd()
     cmd0 = ["mkdir", "-p", "results/observed_quality"]
-    cmd1 = ["seqkit", "seq", read, "-m", "200", "-Q", "7", "-g", "-j", str(threads), "-o", "results/observed_quality/clean.fastq"]
+    cmd1 = ["seqkit", "seq", read, "-m", "200", "-g", "-j", str(threads), "-o", "results/observed_quality/clean.fastq"]
     cmd2 = ["minimap2", "-ax", "map-ont", "-o", "results/observed_quality/tmp.sam", "--MD", "--secondary=no", "-L", "-t", str(threads), ref, "results/observed_quality/clean.fastq"]
     cmd3 = ["samtools", "view", "-bS", "-F4", "-@", str(threads), "-o", "results/observed_quality/tmp.bam", "results/observed_quality/tmp.sam"]
     cmd4 = ["samtools", "sort", "-@", str(threads), "-o", "results/observed_quality/tmp.sort.bam", "results/observed_quality/tmp.bam"]
