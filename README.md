@@ -177,7 +177,7 @@ results/
 
 
 
->![alt text](example/demo/estimated_read_accuracy.png)
+>![alt text](example/demo/Demo_1.png)
 
 
 
