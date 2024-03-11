@@ -204,11 +204,8 @@ results/
 
 
 
->![alt text](example/demo/Observed_read_accuracy.png)
+>![alt text](example/demo/Demo_2.png)
 
->![alt text](example/demo/Observed_mismatch_proportion.png)
-
->![alt text](example/demo/Observed_homopolymer_identification.png)
 
 
 
@@ -231,9 +228,8 @@ results/
 
 
 
->![alt text](example/demo/bin_distribution.png)
+>![alt text](example/demo/Demo_3.png)
 
->![alt text](example/demo/GC_bias.png)
 
 
 
@@ -248,9 +244,8 @@ results/
 
 
 
->![alt text](example/demo/motif_bin_violin.png)
+>![alt text](example/demo/Demo_4.png)
 
->![alt text](example/demo/motif_bin_box.png)
 
 
 
