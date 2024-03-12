@@ -28,9 +28,9 @@ def process_chunk(chunk):
     """
     results = []
     for line in chunk:
-        read_id, quality = line
+        read_id, quality, read_length= line
         quality = calculate_read_accuracy(quality)
-        results.append([read_id, quality[0], quality[1], quality[2]])
+        results.append([read_id, quality[0], quality[1], quality[2], read_length])
     return results
 
 def calculate_estimated_accuracy(input_file, num_processes, chunk_size=1000):
@@ -54,9 +54,13 @@ def calculate_estimated_accuracy(input_file, num_processes, chunk_size=1000):
                 line = line.split(" ")
                 read_id = line[0]
                 count += 1
+            elif count % 4 == 2:
+                line = line.replace("\n", "")
+                read_length=len(line)
+                count += 1
             elif count % 4 == 0:
                 line = line.replace("\n", "")
-                chunk.append((read_id, line))
+                chunk.append((read_id, line, read_length))
                 count += 1
             else:
                 count += 1
@@ -70,9 +74,9 @@ def calculate_estimated_accuracy(input_file, num_processes, chunk_size=1000):
 
     output_file = open("results/estimated_quality/final_estimated_accuracy.txt", "w")
     # with open("result/estimated/estimated_accuracy.txt", "w") as output_file:
-    output_file.write("ID\tacc\terror\tQ_value\n")
+    output_file.write("ID\tacc\terror\tQ_value\tRead_length\n")
     for result in results:
         for line in result.get():
-            message = f"{line[0]}\t{line[1]}\t{line[2]}\t{line[3]}"
+            message = f"{line[0]}\t{line[1]}\t{line[2]}\t{line[3]}\t{line[4]}"
             output_file.write(message + "\n")
     output_file.close()
