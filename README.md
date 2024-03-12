@@ -53,7 +53,7 @@ optional arguments:
 
 The available sub-commands are:
 
-#### estimate  
+### estimate  
 
 ```shell
 giraffe estimate -h
@@ -82,7 +82,7 @@ R3 ONT test/reads/S3.fastq
 
 
 
-#### observe
+### observe
 
 ```shell
 giraffe observe -h
@@ -105,7 +105,7 @@ optional arguments:
 
 
 
-#### gcbias
+### gcbias
 
 ```shell
 giraffe gcbias -h
@@ -139,7 +139,7 @@ R3 ONT test/reads/S3.bam
 
 
 
-#### modbin
+### modbin
 
 ```shell
 giraffe modbin -h
@@ -288,7 +288,6 @@ Giraffe_Results/
 
 
 
-
 ### 3_GC_bias
 
 - `Bin_distribution.txt` - BINs number within each GC content. (GC content,  and Number of BINs)
@@ -307,7 +306,6 @@ Giraffe_Results/
 - `2_Relationship_normalization.pdf` -  Relationship between normalized depth and GC content **(Fig B)**.
 
 ![alt text](example/demo/Demo_3.png)
-
 
 
 
