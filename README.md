@@ -1,3 +1,5 @@
+# Giraffe View
+
 **Giraffe_View** is specially designed to provide a comprehensive assessment of the accuracy of long-read sequencing datasets obtained from both the PacBio and Nanopore platforms. 
 
 
