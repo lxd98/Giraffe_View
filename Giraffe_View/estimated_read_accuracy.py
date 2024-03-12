@@ -1,8 +1,17 @@
+from os import system 
 import numpy as np
 import math
 import multiprocessing
 
-def calculate_read_accuracy(string):
+def GC_content(string):
+    read = str(string).upper()
+    length = len(read)
+    c = read.count("C")
+    g = read.count("G")
+    GC = (c+g)/length
+    return[length, GC]
+
+def Qvalue_to_accuracy(string):
     """
     Calculate the estimated accuracy for a given string.
     Parameters:
@@ -28,12 +37,13 @@ def process_chunk(chunk):
     """
     results = []
     for line in chunk:
-        read_id, quality, read_length= line
-        quality = calculate_read_accuracy(quality)
-        results.append([read_id, quality[0], quality[1], quality[2], read_length])
+        read_id, sequence, quality = line
+        GC = GC_content(sequence)
+        quality = Qvalue_to_accuracy(quality)
+        results.append([read_id, quality[0], quality[1], quality[2], GC[0], GC[1]])
     return results
 
-def calculate_estimated_accuracy(input_file, num_processes, chunk_size=1000):
+def calculate_estimated_accuracy(input_type, input_file, num_processes, chunk_size=1000):
     """
     Calculate the estimated accuracy for each read in an input file and write the results to an output file.
     Parameters:
@@ -48,22 +58,29 @@ def calculate_estimated_accuracy(input_file, num_processes, chunk_size=1000):
         count = 1
         chunk = []
         for line in input_file:
-            # Get the read ID
+            
+            # get the read ID
             if count % 4 == 1:
                 line = line.replace("\n", "")
                 line = line.split(" ")
                 read_id = line[0]
                 count += 1
+            
+            # get the read sequence
             elif count % 4 == 2:
-                line = line.replace("\n", "")
-                read_length=len(line)
+                sequence = line.replace("\n", "")
                 count += 1
+
+            # get the quality string
             elif count % 4 == 0:
                 line = line.replace("\n", "")
-                chunk.append((read_id, line, read_length))
+                chunk.append((read_id, sequence, line))
                 count += 1
+            
             else:
                 count += 1
+
+
             if len(chunk) == chunk_size:
                 results.append(pool.apply_async(process_chunk, (chunk,)))
                 chunk = []
@@ -71,12 +88,24 @@ def calculate_estimated_accuracy(input_file, num_processes, chunk_size=1000):
             results.append(pool.apply_async(process_chunk, (chunk,)))
     pool.close()
     pool.join()
+    input_file.close()
 
-    output_file = open("results/estimated_quality/final_estimated_accuracy.txt", "w")
-    # with open("result/estimated/estimated_accuracy.txt", "w") as output_file:
-    output_file.write("ID\tacc\terror\tQ_value\tRead_length\n")
-    for result in results:
-        for line in result.get():
-            message = f"{line[0]}\t{line[1]}\t{line[2]}\t{line[3]}\t{line[4]}"
-            output_file.write(message + "\n")
+    file = "Giraffe_Results/1_Estimated_quality/" + str(input_type) + ".tmp"
+    with open(file, "a") as output_file:
+            for result in results:
+                for line in result.get():
+                    message = f"{line[0]}\t{line[1]}\t{line[2]}\t{line[3]}"
+                    message += f"\t{line[4]}\t{line[5]}\t{input_type}"
+                    output_file.write(message + "\n")
     output_file.close()
+    output_file.close()
+
+
+def merge_results():
+    with open("Giraffe_Results/1_Estimated_quality/header", "a") as ff:
+        ff.write("ReadID\tAccuracy\tError\tQ_value\tLength\tGC_content\tGroup\n")
+    ff.close()
+    system("cat Giraffe_Results/1_Estimated_quality/header \
+        Giraffe_Results/1_Estimated_quality/*tmp > \
+        Giraffe_Results/1_Estimated_quality/Estimated_information.txt")
+    system("rm Giraffe_Results/1_Estimated_quality/*tmp Giraffe_Results/1_Estimated_quality/header")

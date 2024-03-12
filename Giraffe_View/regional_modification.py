@@ -20,7 +20,7 @@ def worker(inqueue, outqueue, data):
     outqueue.put(f"{current_process().name}: BYE!")
 
 
-def manager(process_num, input_file, input_ref):
+def manager(process_num, input_file, input_ref, sample_ID):
     """Distribute work to worker processes and write output to file."""
     data = pd.read_csv(input_file, header=None, names=["ref_ID", "start", "end", "modified_percentage"], sep="\t")
     targets = pd.read_csv(input_ref, header=None, names=["chr", "start", "end", "target_id"])
@@ -39,15 +39,15 @@ def manager(process_num, input_file, input_ref):
         inqueue.put("STOP")
 
     stop_count = 0
-    with tqdm(total=total, desc=input_file) as pbar, open(f"results/regional_modification/{input_file.replace('.bed', '')}_{input_ref.replace('.csv', '')}.bed", "w") as of:
+    with tqdm(total=total, desc=input_file) as pbar, open(f"Giraffe_Results/4_Regional_modification/{str(sample_ID)}.bed", "w") as of:
         while stop_count < process_num:
             pbar.update()
             result = outqueue.get()
             if len(result) == 2:
-                of.write(f"{result[0]}\t{result[1]}\n")
+                of.write(f"{result[0]}\t{result[1]}\t{str(sample_ID)}\n")
             elif result[-4:] == "BYE!":
                 stop_count += 1
 
-def methylation_calculation(input_file, input_ref, process_num):
+def methylation_calculation(input_file, input_ref, process_num, sample_ID):
     """Calculate average methylation level for target regions in input_ref using methylation data in input_file."""
-    manager(process_num, input_file, input_ref)
+    manager(process_num, input_file, input_ref, sample_ID)

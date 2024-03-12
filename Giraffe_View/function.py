@@ -10,6 +10,24 @@ def print_with_color(input_string):
 def error_with_color(input_string):
     print(colored(input_string, "red"))
 
+def loading_dataset(input_file):
+    dataset = {}
+    with open(input_file) as ff:
+        for l in ff:
+            l = l.replace("\n", "")
+            l = l.split(" ")
+
+            # check the file
+            if os.path.exists(l[2]):
+                dataset[l[0]] = {}
+                dataset[l[0]]["type"] = l[1]
+                dataset[l[0]]["path"] = l[2]
+
+            else:
+                error_with_color("Please check the path of " + str(l[0]) + "!")
+
+    return dataset
+
 def cmd_shell(cammands, string):
     process = Popen(cammands.split(' '), stdout=subprocess.DEVNULL, universal_newlines=True)
     process.wait()
@@ -22,34 +40,10 @@ def cmd_shell(cammands, string):
         # print('{} FAILED'.format(string))
         error_with_color(err)
 
-def Data_process(read, ref, threads=10):
-    # Define the commands as a list of strings to avoid issues with spaces
-    # in file names or command arguments
-    # path =  os.getcwd()
-    cmd0 = ["mkdir", "-p", "results/observed_quality"]
-    cmd1 = ["seqkit", "seq", read, "-m", "200", "-g", "-j", str(threads), "-o", "results/observed_quality/clean.fastq"]
-    cmd2 = ["minimap2", "-ax", "map-ont", "-o", "results/observed_quality/tmp.sam", "--MD", "--secondary=no", "-L", "-t", str(threads), ref, "results/observed_quality/clean.fastq"]
-    cmd3 = ["samtools", "view", "-bS", "-F4", "-@", str(threads), "-o", "results/observed_quality/tmp.bam", "results/observed_quality/tmp.sam"]
-    cmd4 = ["samtools", "sort", "-@", str(threads), "-o", "results/observed_quality/tmp.sort.bam", "results/observed_quality/tmp.bam"]
-    cmd5 = ["samtools", "index", "-@", str(threads), "results/observed_quality/tmp.sort.bam"]
-    cmd6 = ["rm", "-rf", "results/observed_quality/tmp.sam", "results/observed_quality/tmp.bam"]
-
-    # Run each command and check the return code
-    for i, cmd in enumerate([cmd0, cmd1, cmd2, cmd3, cmd4, cmd5, cmd6]):
-        try:
-            subprocess.run(cmd, check=True)
-            # print("Command {} succeeded".format(i + 1))
-        except subprocess.CalledProcessError as e:
-            print("Command {} failed with error code {}".format(i + 1, e.returncode))
-            print(e.output)
-            # Raise an exception to indicate that processing failed
-            raise Exception("Data processing failed")
-
 def mkdir_d(input_name):
-    mes = "results/" + str(input_name)
+    mes = "Giraffe_Results/" + str(input_name)
     cmd = ["mkdir", "-p", str(mes)]
     subprocess.run(cmd, check=True)
-
 
 def count_indel_and_snv(str):
     dict = {}

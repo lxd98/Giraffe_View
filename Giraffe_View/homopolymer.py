@@ -1,10 +1,12 @@
+from os import system 
 import pandas as pd
 import pysam
 import re
 import multiprocessing
 from Giraffe_View.function import *
 
-def homopolymer_from_bam(input_bamfile):
+
+def homopolymer_from_bam(input_bamfile, sample_ID):
 	bamfile = pysam.AlignmentFile(input_bamfile, threads=4)
 	dir_polymer = {}
 
@@ -44,13 +46,14 @@ def homopolymer_from_bam(input_bamfile):
 							homoploymer_ref_pos.insert(0, str(len(homoploymer_ref)) + homoploymer_ref[0])
 							dir_polymer[read_ID][str(count)] = homoploymer_ref_pos.copy()
 							count += 1
+
 						del homoploymer_ref_pos[:]
 						homoploymer_ref = str(base[2]).upper()
 						homoploymer_read = str(get_base_alignment(base))
 						homoploymer_ref_pos.append(base[1])
 	bamfile.close()
-
-	ff = open("results/observed_quality/homo.txt", "w")
+	output = "Giraffe_Results/2_Observed_quality/" + str(sample_ID) + "_homopolymer_detail.txt"
+	ff = open(output, "w")
 	for read in dir_polymer.keys():
 		for n in dir_polymer[read].keys():
 			stat_info = count_indel_and_snv(str(dir_polymer[read][n][1]))
@@ -67,11 +70,11 @@ def homopolymer_from_bam(input_bamfile):
 			mes = str(dir_polymer[read][n][2]) + "\t" +  str(dir_polymer[read][n][3]) + "\t" + str(dir_polymer[read][n][-1]) + "\t" # chr start end
 			mes += str(dir_polymer[read][n][0][:-1]) + "\t" + str(dir_polymer[read][n][0][-1]) + "\t"  #  4 A
 			mes += str(stat_info["M"]) + "\t" + str(stat_info["D"]) + "\t" + str(stat_info["I"]) + "\t" + str(stat_info["S"])  + "\t"  # map del ins sub
-			mes += str(read)
+			mes += str(read) + "\t" + str(sample_ID)
 			ff.write(mes + "\n")
 	ff.close()
 
-def homopolymer_summary_1(input_file):
+def homopolymer_summary_1(input_file, sample_ID):
 	data = {}
 	with open(input_file) as ff:
 		for line in ff:
@@ -94,22 +97,23 @@ def homopolymer_summary_1(input_file):
 					data[position]["mat"] += 1
 	ff.close()
 
-	ff = open("results/observed_quality/homo_tmp.txt", "w")
-	ff.write("pos\tnum_of_mat\tdepth\ttype\n")   
+	output_1 = "Giraffe_Results/2_Observed_quality/" + str(sample_ID) + "_homopolymer_in_reference.txt"
+	ff = open(output_1, "w")
+	ff.write("pos\tnum_of_mat\tdepth\ttype\tGroup\n")
 
 	for i in data.keys():
 		mes = str(i) + "\t" + str(data[i]["mat"]) + "\t" + str(data[i]["depth"]) + "\t" + data[i]["type"]
-		ff.write(mes + "\n")
+		ff.write(mes + "\t" + str(sample_ID) + "\n")
 	ff.close()
 
-def homopolymer_summary_2():
-	data = pd.read_table("results/observed_quality/homo_tmp.txt", sep="\t")	
+def homopolymer_summary_2(sample_ID):
+	input_file = "Giraffe_Results/2_Observed_quality/" + str(sample_ID) + "_homopolymer_in_reference.txt"
+	output_file = "Giraffe_Results/2_Observed_quality/" + str(sample_ID) + ".homo_tmp"
+	data = pd.read_table(input_file, sep="\t")	
 	valid = data[data["depth"] >= 3].copy()
 
 	if len(valid) != 0:
-		ff = open("results/observed_quality/final_homo_summary.txt", "w")
-		ff.write("base\tvalue\n")
-
+		ff = open(output_file, "w")
 		valid["rate"] = valid["num_of_mat"] / valid["depth"]
 		
 		def Abase(x):
@@ -136,10 +140,21 @@ def homopolymer_summary_2():
 			else: 
 				return(False)
 		
-		ff.write("T\t" + str(valid[valid["type"].apply(Tbase)]["rate"].mean()) + "\n")
-		ff.write("G\t" + str(valid[valid["type"].apply(Gbase)]["rate"].mean()) + "\n")
-		ff.write("A\t" + str(valid[valid["type"].apply(Abase)]["rate"].mean()) + "\n")
-		ff.write("C\t" + str(valid[valid["type"].apply(Cbase)]["rate"].mean()) + "\n")
+		ff.write("T\t" + str(valid[valid["type"].apply(Tbase)]["rate"].mean()) + "\t" + str(sample_ID) + "\n")
+		ff.write("G\t" + str(valid[valid["type"].apply(Gbase)]["rate"].mean()) + "\t" + str(sample_ID) +"\n")
+		ff.write("A\t" + str(valid[valid["type"].apply(Abase)]["rate"].mean()) + "\t" + str(sample_ID) +"\n")
+		ff.write("C\t" + str(valid[valid["type"].apply(Cbase)]["rate"].mean()) + "\t" + str(sample_ID) +"\n")
 		ff.close()
 	else:
-		print("The read coverage of data was shallow, homopolymer analysis failed!!!")
+		error_with_color("The read coverage of data was too shallow to conduct the homopolymer analysis!!!") 
+
+def merge_results_observed_homopolymer():
+    with open("Giraffe_Results/2_Observed_quality/header", "a") as ff:
+        ff.write("Base\tAccuracy\tGroup\n")
+    ff.close()
+
+    system("cat Giraffe_Results/2_Observed_quality/header \
+        Giraffe_Results/2_Observed_quality/*.homo_tmp > \
+        Giraffe_Results/2_Observed_quality/Homoploymer_summary.txt")
+    system("rm Giraffe_Results/2_Observed_quality/*homo_tmp \
+        Giraffe_Results/2_Observed_quality/header")

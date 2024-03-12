@@ -2,7 +2,6 @@
 import sys
 import argparse
 import pathlib
-
 from Giraffe_View.function import *
 from Giraffe_View.homopolymer import *
 from Giraffe_View.observed_read_accuracy import *
@@ -13,124 +12,142 @@ from Giraffe_View.plot import *
 
 working_path = pathlib.Path().resolve()
 
-def observed(args):
-    print_with_color("Start data processing!")
-    Data_process(args.input, args.ref, args.cpu)
-    
-    print_with_color("Start observed accuracy analysis!")
-    observed_accuracy("results/observed_quality/tmp.sort.bam")
-
-    if args.plot:
-    	print_with_color("Start plotting results of observe read accuracy!")
-    	plot_observe_acc()
-    else:
-    	pass
-
-    print_with_color("Start homopolymer identification!")
-    homopolymer_from_bam("results/observed_quality/tmp.sort.bam")
-    homopolymer_summary_1("results/observed_quality/homo.txt")
-    homopolymer_summary_2()
-
-    if args.plot:
-    	print_with_color("Start plotting results of homopolymer identification!")
-    	plot_observe_homo()
-    else:
-    	pass
-
-    mes = "The results are available at " + str(working_path) + "/results/observed_quality!"
-    print_with_color(str(mes))
-
 def estimated(args):
-    mkdir_d("estimated_quality")
+	print_with_color("Start data processing!")
+	mkdir_d("1_Estimated_quality")
+	print_with_color("Start estimated read accuracy analysis!")
 
-    print_with_color("Start estimated read accuracy analysis!")
-    calculate_estimated_accuracy(args.input, args.cpu)
-    
-    if args.plot:
-        print_with_color("Start plotting!")
-        plot_estimate()
-        print_with_color("Analysis finished!")
-    else:
-        print_with_color("Analysis finished!")
-    
-    mes = "The results are available at " + str(working_path) + "/results/estimated_quality!"
-    print_with_color(str(mes))
+	input_dataset = loading_dataset(args.input)
+	for data in input_dataset.keys():
+		calculate_estimated_accuracy(data, input_dataset[data]["path"], args.cpu)
+	merge_results()
+
+	if args.plot:
+		print_with_color("Start plotting!")
+		plot_estimate()
+		print_with_color("Analysis finished!")
+	else:
+		print_with_color("Analysis finished!")
+	
+	mes = "The results are available at " + str(working_path) + "/results/1_Estimated_quality!"
+	print_with_color(str(mes))
+
+def observed(args):
+	print_with_color("Start data processing!")
+	mkdir_d("2_Observed_quality")
+	input_dataset = loading_dataset(args.input)
+	for data in input_dataset.keys():
+		data_process(data, input_dataset[data]["type"], input_dataset[data]["path"], args.ref, args.cpu)
+		bamfile = "Giraffe_Results/2_Observed_quality/" + str(data) + ".bam"
+
+		print_with_color(str(data) + ": Start observed read accuracy analysis!")
+		observed_accuracy(bamfile, data)
+
+		print_with_color(str(data) + ": Start observed homopolymer analysis!")
+		homopolymer_from_bam(bamfile, data)
+
+		output = "Giraffe_Results/2_Observed_quality/" + str(data) + "_homopolymer_detail.txt"
+		homopolymer_summary_1(output, data)
+		homopolymer_summary_2(data)
+
+	merge_results_observed_acc()
+	merge_results_observed_homopolymer()
+
+	if args.plot:
+		print_with_color("Start plotting!")
+		plot_observe_acc()
+		plot_observe_homo()
+	else:
+		pass
+
+	mes = "The results are available at " + str(working_path) + "/results/observed_quality!"
+	print_with_color(str(mes))
 
 def GC_bias(args):
-    mkdir_d("GC_bias")
-    print_with_color("Start GC bias analysis!")
-    compute_GC_bias(args.ref, args.input, args.binsize)
-    merge_CG_content_and_depth(args.binsize)
+	mkdir_d("3_GC_bias")
+	print_with_color("Start GC bias analysis!")
+	input_dataset = loading_dataset(args.input)
+	for data in input_dataset.keys():
+		compute_GC_bias(args.ref, input_dataset[data]["path"], args.binsize, data)
+		merge_GC_content_and_depth(args.binsize, data)
+	merge_files()
+	get_bin_number_within_GC_content()
 
-    if args.plot:
-        print_with_color("Start plotting!")
-        plot_GC_bias()
-        print_with_color("Analysis finished!")
-    else:
-        print_with_color("Analysis finished!")
-    
-    mes = "The results are available at " + str(working_path) + "/results/GC_bias!"
-    print_with_color(str(mes))
+	if args.plot:
+		print_with_color("Start plotting!")
+		plot_GC_bias()
+		print_with_color("Analysis finished!")
+	else:
+		print_with_color("Analysis finished!")
+	
+	mes = "The results are available at " + str(working_path) + "/results/GC_bias!"
+	print_with_color(str(mes))
 
 def methylation(args):
-    mkdir_d("regional_modification")
-    print_with_color("Start calculating the modification bin analysis!")
-    methylation_calculation(args.input, args.ref, args.cpu)
+	mkdir_d("4_Regional_modification")
+	print_with_color("Start calculating the modification bin analysis!")
 
-    if args.plot:
-        print_with_color("Start plotting!")
-        plot_modi_bin(args.input, args.ref)
-        print_with_color("Analysis finished!")
-    else:
-        print_with_color("Analysis finished!")
 
-    mes = "The results are available at " + str(working_path) + "/results/regional_modification!"
-    print_with_color(str(mes))
+	input_dataset = loading_dataset(args.input)
+	for data in input_dataset.keys():
+		methylation_calculation(input_dataset[data]["path"], args.bed, args.cpu, data)
+
+	if args.plot:
+		print_with_color("Start plotting!")
+		plot_modi_bin()
+		print_with_color("Analysis finished!")
+	else:
+		print_with_color("Analysis finished!")
+
+	mes = "The results are available at " + str(working_path) + "/results/regional_modification!"
+	print_with_color(str(mes))
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(prog="giraffe", description="A tool to help you assess quality of ONT data.")
+	parser = argparse.ArgumentParser(prog="giraffe", description="A tool to help you assess the quality of long-read sequencing data.")
 
-    # Define subparsers
-    subparsers = parser.add_subparsers(dest='function', help="")
-    observed_parser = subparsers.add_parser('observe', help='Observed quality in accuracy, mismatch, and homopolymer identification')
-    observed_parser.add_argument("--input", type=str, metavar="<fastq>", required=True, help="input reads")
-    observed_parser.add_argument("--ref", type=str, metavar="<reference>", required=True, help="input reference")
-    observed_parser.add_argument("--cpu", type=int, metavar="<number>", required=False, help="number of cpu (default:10)", default=10)
-    observed_parser.add_argument("--plot", required=False, help="Results visualization", action='store_true')
+	# Define subparsers
+	subparsers = parser.add_subparsers(dest='function', help="")
+	
+	estimated_parser = subparsers.add_parser('estimate', help='Estimated accuracy, length, and GC content.')
+	estimated_parser.add_argument("--input", type=str, metavar="<file list>", required=True, help="input the file list")
+	estimated_parser.add_argument("--cpu", type=int, metavar="<number>", required=False, help="number of CPU (default:10)", default=10)
+	estimated_parser.add_argument("--plot", required=False, help="results visualization", action='store_true')
 
-    estimated_parser = subparsers.add_parser('estimate', help='Estimated read accuracy')
-    estimated_parser.add_argument("--input", type=str, metavar="<fastq>", required=True, help="input reads")
-    estimated_parser.add_argument("--cpu", type=int, metavar="<number>", required=False, help="number of cpu (default:10)", default=10)
-    estimated_parser.add_argument("--plot", required=False, help="Results visualization", action='store_true')
 
-    GC_bias_parser = subparsers.add_parser('gcbias', help='Relationship between GC content and depth')
-    GC_bias_parser.add_argument("--ref", type=str, metavar="<reference>", required=True, help="input reference file")
-    GC_bias_parser.add_argument("--input", type=str, metavar="<sam/bam>", required=True, help="input bam/sam file")
-    GC_bias_parser.add_argument("--binsize", type=int, metavar="", required=False, help="input bin size (default:1000)", default=1000)
-    GC_bias_parser.add_argument("--plot", required=False, help="Results visualization", action='store_true')
+	observed_parser = subparsers.add_parser('observe', help='Observed accuracy, mismatch proportion, and homopolymer identification.')
+	observed_parser.add_argument("--input", type=str, metavar="<file list>", required=True, help="input the file list")
+	observed_parser.add_argument("--ref", type=str, metavar="<reference>", required=True, help="input reference")
+	observed_parser.add_argument("--cpu", type=int, metavar="<number>", required=False, help="number of CPU (default:10)", default=10)
+	observed_parser.add_argument("--plot", required=False, help="results visualization", action='store_true')
 
-    methylation_parser = subparsers.add_parser('modibin', help='Average modification proportion of bins')
-    methylation_parser.add_argument("--input", type=str, metavar="<bed>", required=True, help="input modificated bed file, please use the .bed as the file suffix")
-    methylation_parser.add_argument("--ref", type=str, metavar="<reference>", required=True, help="input position file with CSV format, please use the .csv as the file suffix")
-    methylation_parser.add_argument("--cpu", type=int, metavar="<number>", required=False, help="number of cpu (default:10)", default=10)
-    methylation_parser.add_argument("--plot", required=False, help="Results visualization", action='store_true')
+	GC_bias_parser = subparsers.add_parser('gcbias', help='Relationship between GC content and sequencing depth.')
+	GC_bias_parser.add_argument("--ref", type=str, metavar="<reference>", required=True, help="input reference file")
+	GC_bias_parser.add_argument("--input", type=str, metavar="<list>", required=True, help="input the list of bam/sam file")
+	GC_bias_parser.add_argument("--binsize", type=int, metavar="", required=False, help="input bin size (default:1000)", default=1000)
+	GC_bias_parser.add_argument("--plot", required=False, help="results visualization", action='store_true')
 
-    # Add function to print help if no arguments are provided
-    if len(sys.argv) == 1:
-        parser.print_help(sys.stderr)
-        sys.exit(1)
+	methylation_parser = subparsers.add_parser('modbin', help='Average modification proportion at regional level.')
+	methylation_parser.add_argument("--input", type=str, metavar="<list>", required=True, help="input list of modificated file")
+	methylation_parser.add_argument("--bed", type=str, metavar="<reference>", required=True, help="input position file with CSV format")
+	methylation_parser.add_argument("--cpu", type=int, metavar="<number>", required=False, help="number of CPU (default:10)", default=10)
+	methylation_parser.add_argument("--plot", required=False, help="results visualization", action='store_true')
 
-    args = parser.parse_args()
+	# Add function to print help if no arguments are provided
+	if len(sys.argv) == 1:
+		parser.print_help(sys.stderr)
+		sys.exit(1)
 
-    # Call the appropriate function based on the subparser used
-    if args.function == "observe":
-        observed(args)
+	args = parser.parse_args()
 
-    elif args.function == "modibin":
-        methylation(args)
+	# Call the appropriate function based on the subparser used
+	if args.function == "observe":
+		observed(args)
 
-    elif args.function == "gcbias":
-        GC_bias(args)
+	elif args.function == "modbin":
+		methylation(args)
 
-    elif args.function == "estimate":
-        estimated(args)
+	elif args.function == "gcbias":
+		GC_bias(args)
+
+	elif args.function == "estimate":
+		estimated(args)
