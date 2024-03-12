@@ -1,41 +1,49 @@
 # Giraffe_View 
 
-**Giraffe_View** is designed to help assess and visualize the accuracy of a sequencing dataset, specifically for Oxford Nanopore Technologies (ONT) long-read sequencing including DNA and RNA data. There are four main functions to validate the read quality.
+**Giraffe_View** is specially designed to provide a comprehensive assessment of the accuracy of long-read sequencing datasets obtained from both the PacBio and Nanopore platforms. 
 
-- `observe`  calculates the observed accuracy, mismatches porportion, and homopolymer identification.
-- `estimate`  calculates the estimated accuracy, which is equal to Quality Score.
-- `gcbias`  compares the relationship between GC content and read coverage.
-- `modibin` performs statistics on the distribution of modification based on the bed file.
+
+
+- `estimate`  Calculation of estimated read accuracy (Q score), length, and GC content. 
+
+- `observe`  Calculation of observed read accuracy, mismatch proportion, and homopolymer identification (e.g. AAAA).
+- `gcbias`  Calculation of the relationship between GC content and sequencing depth.
+- `modbin` Calculation of the distribution of modification (e.g. 5mC or 6mA methylation) at the regional level.
 
 
 
 ## Installation
 
-To use this software, you'll need to install additional tools for read processing, including samtools, seqkit，minimap2, and bedtools. The following commands can help you install both the software package and its dependencies.
+Before using this tool, you need to install additional dependencies for read processing, including the [samtools](https://www.htslib.org/)，[minimap2](https://github.com/lh3/minimap2), and [bedtools](https://github.com/arq5x/bedtools2). The following commands can help you install both the software package and its dependencies.
 
 ```shell
+conda install -c bioconda -c conda-forge samtools minimap2 bedtools -y
 pip install Giraffe-View
-conda install -c bioconda -c conda-forge samtools minimap2 seqkit bedtools -y
 ```
+
+If you are unfamiliar with the process of installing `conda`, you can refer to the official conda documentation for detailed instructions. Please follow [this link](https://conda.io/projects/conda/en/latest/user-guide/install/index.html) for guidance on installing conda.
 
 
 
 ## General Usage
 
-giraffe can be run using these simple commands:
+The `giraffe` can be run using following  commands:
 
-```
+```shell
 giraffe -h
-usage: giraffe [-h] {observe,estimate,gcbias,modibin} ...
+```
 
-A tool to help you assess quality of ONT data.
+```shell
+usage: giraffe [-h] {estimate,observe,gcbias,modbin} ...
+
+A tool to help you assess the quality of long-read sequencing data.
 
 positional arguments:
-  {observe,estimate,gcbias,modibin}
-    observe             Observed quality in accuracy, mismatch, and homopolymer identification
-    estimate            Estimated read accuracy
-    gcbias              Relationship between GC content and depth
-    modibin             Average modification proportion of bins
+  {estimate,observe,gcbias,modbin}
+    estimate            Estimated accuracy, length, and GC content.
+    observe             Observed accuracy, mismatch proportion, and homopolymer identification.
+    gcbias              Relationship between GC content and sequencing depth.
+    modbin              Average modification proportion at regional level.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -45,81 +53,120 @@ optional arguments:
 
 The available sub-commands are:
 
+#### estimate  
+
+```shell
+giraffe estimate -h
+```
+
+```shell
+usage: giraffe estimate [-h] --input <file list> [--cpu <number>] [--plot]
+
+options:
+  -h, --help           show this help message and exit
+  --input <file list>  input the file list
+  --cpu <number>       number of cpu (default:10)
+  --plot               results visualization
+```
+
+`file list` - a table with your sample ID, sequencing platforms (ONT/Pacbio), and path of your datasets **(FASTQ format)**, please using the SPACE(" ") to gap them.
+
+`cpu` - number of CPUs will be used during processing.
+
+```shell
+# A example of file list
+R1 ONT test/reads/S1.fastq
+R2 Pacbio test/reads/S2.fastq
+R3 ONT test/reads/S3.fastq
+```
+
+
+
 #### observe
 
-```
+```shell
 giraffe observe -h
-usage: giraffe observe [-h] --input <fastq> --ref <reference> [--cpu <number>] [--plot]
+```
+
+```shell
+usage: giraffe observe [-h] --input <file list> --ref <reference> [--cpu <number>] [--plot]
 
 optional arguments:
-  -h, --help         show this help message and exit
-  --input <fastq>    input reads
-  --ref <reference>  input reference
-  --cpu <number>     number of cpu (default:10)
-  --plot             Results visualization
+  -h, --help           show this help message and exit
+  --input <file list>  input the file list
+  --ref <reference>    input reference
+  --cpu <number>       number of CPU (default:10)
+  --plot               results visualization
 ```
 
-- `fastq` - raw FASTQ data, some filtering steps will be performed, including removal of short reads (length < 200 bp) and low-quality reads (Q value < 7).
+- `file list` - a table same with the above one.
 - `reference` - reference file in FASTA format.
 - `cpu` - number of CPUs will be used during processing.
 
 
 
-#### estimate  
-
-```
-giraffe estimate -h
-usage: giraffe estimate [-h] --input <fastq> [--cpu <number>] [--plot]
-
-optional arguments:
-  -h, --help       show this help message and exit
-  --input <fastq>  input reads
-  --cpu <number>   number of cpu (default:10)
-  --plot           Results visualization
-```
-
-- `fastq` - FASTQ data.
-
-
-
 #### gcbias
 
-```
+```shell
 giraffe gcbias -h
-usage: giraffe gcbias [-h] --ref <reference> --input <sam/bam> [--binsize] [--plot]
+```
+
+```shell
+usage: giraffe gcbias [-h] --ref <reference> --input <list> [--binsize] [--plot]
 
 optional arguments:
   -h, --help         show this help message and exit
   --ref <reference>  input reference file
-  --input <sam/bam>  input bam/sam file
+  --input <list>     input the list of bam/sam file
   --binsize          input bin size (default:1000)
-  --plot             Results visualization
+  --plot             results visualization
 ```
 
-- `reference` - the reference file in FASTA format.
-- `sam` / `bam` - the result  SAM/ BAM file. If you have used the observe function to process your data, the resulting `tmp.sort.bam` file can be used as the input.
-- `binsize` - the length of BIN. The BIN is the unit to count the read coverage and GC content.
+- `file list` - a table with your sample ID, sequencing platforms (ONT/Pacbio), and path of your alignment files **(sam/bam format)**, please using the SPACE(" ") to gap them. 
 
+  **P.S.** If you have used the observe function to process your data, the resulting bam file can be used as the input.
 
+- `reference` - the reference file.
 
-#### modibin
+- `binsize` - the length of BIN. The BIN is the unit to count the read coverage and GC content (e.g. 3000 or 5000).
 
+```shell
+# A example of file list
+R1 ONT test/reads/S1.bam
+R2 Pacbio test/reads/S2.bam
+R3 ONT test/reads/S3.bam
 ```
-giraffe modibin -h
-usage: giraffe modibin [-h] --input <bed> --ref <reference> [--cpu <number>] [--plot]
+
+
+
+#### modbin
+
+```shell
+giraffe modbin -h
+```
+
+```shell
+usage: giraffe modbin [-h] --input <list> --bed <reference> [--cpu <number>] [--plot]
 
 optional arguments:
   -h, --help         show this help message and exit
-  --input <bed>      input modificated bed file, please use the .bed as the file suffix
-  --ref <reference>  input position file with CSV format, please use the .csv as the file suffix
-  --cpu <number>     number of cpu (default:10)
-  --plot             Results visualization
+  --input <list>     input list of modificated file
+  --bed <reference>  input position file with CSV format
+  --cpu <number>     number of CPU (default:10)
+  --plot             results visualization
 ```
 
-- `bed` -  a BED file with four columns (three columns for position, one for methylation value).  Please use the tab ("\t") to gap the column instead of the space (" ").
+- `list` - a table with your sample ID, sequencing platforms (ONT/Pacbio), and path of your files with methylation information, please using the SPACE(" ") to gap them. 
 
-   ```
-   #chrom	start	end	value
+- ```shell
+   # A example of file list
+   R1 ONT test/reads/5mC_S1.txt
+   R2 Pacbio test/reads/5mC_S2.txt
+   R3 ONT test/reads/5mC_S3.txt
+   
+   # A example of your methylation file with four columns (three columns for position, one for methylation value).  
+   # Please use the tab ("\t") to gap the column instead of the space (" ").
+   # chrom	start	end	value
    chr1	81	83	0.8
    chr1	21314	21315	0.3
    chr1	32421	32422	0.85
@@ -127,125 +174,155 @@ optional arguments:
 
 - `reference` - a CSV file with target regions (chromosome, start, end, ID)
 
-   ```
-   chr1,0,100000,1_0_100000
-   chr1,100000,200000,1_100000_200000
+   ```shell
+   chr1,0,100000,bin1
+   chr1,100000,200000,bin2
    ```
 
 
 
 ## Results 
 
-if you run the demo data in the example, you will obtain a fold named **results** with following structure.
+if you run the demo data in the example, you will obtain a fold named **Giraffe_Results** with following structure.
 
+```shell
+Giraffe_Results/
+├── 1_Estimated_quality
+│   ├── 1_Read_accuracy.pdf
+│   ├── 2_Read_length.pdf
+│   ├── 3_Read_GC_content.pdf
+│   └── Estimated_information.txt
+├── 2_Observed_quality
+│   ├── 1_Observed_read_accuracy.pdf
+│   ├── 2_Observed_mismatch_proportion.pdf
+│   ├── 3_Homoploymer_summary.pdf
+│   ├── Homoploymer_summary.txt
+│   ├── Observed_information.txt
+│   ├── R1041.bam
+│   ├── R1041.bam.bai
+│   ├── R1041_homopolymer_detail.txt
+│   ├── R1041_homopolymer_in_reference.txt
+│   ├── R941.bam
+│   ├── R941.bam.bai
+│   ├── R941_homopolymer_detail.txt
+│   └── R941_homopolymer_in_reference.txt
+├── 3_GC_bias
+│   ├── 1_Bin_distribution.pdf
+│   ├── 2_Relationship_normalization.pdf
+│   ├── Bin_distribution.txt
+│   ├── R1041_relationship_raw.txt
+│   ├── R941_relationship_raw.txt
+│   └── Relationship_normalization.txt
+└── 4_Regional_modification
+    ├── 1_Regional_modification.pdf
+    ├── Blood.bed
+    └── Kidney.bed
 ```
-results/
-├── estimated_quality
-│   ├── estimated_read_accuracy.pdf
-│   └── final_estimated_accuracy.txt
-├── GC_bias
-│   ├── BIN.bed
-│   ├── bin_distribution.pdf
-│   ├── BIN.dp
-│   ├── final_GC_bias_nor.txt
-│   ├── GC_bias.pdf
-│   ├── GC_bias_raw.txt
-│   └── GC_content.txt
-├── observed_quality
-│   ├── clean.fastq
-│   ├── final_homo_summary.txt
-│   ├── final_observed_accuracy.txt
-│   ├── homo_tmp.txt
-│   ├── homo.txt
-│   ├── Observed_homopolymer_identification.pdf
-│   ├── Observed_mismatch_proportion.pdf
-│   ├── Observed_read_accuracy.pdf
-│   ├── tmp.sort.bam
-│   └── tmp.sort.bam.bai
-└── regional_modification
-    ├── motif_bin_box.pdf
-    ├── motif_bin_violin.pdf
-    └── zebraFish_5mC_zebraFish_promoter.bed
-```
 
 
 
-### estimated_quality
+### 1_Estimated_quality
 
-- `final_estimated_accuracy.txt` - File with read ID, estimated accuracy, estimate error rate, and Q-Score for each read.
-- `estimated_read_accuracy.pdf` -  Visualization of estimated accuracy.
+- `Estimated_information.txt` -  File with read ID, estimated read accuracy, estimate read error, Q Score, GC content, read length and sample ID.
 
+  |  ReadID   | Accuracy | Error | Q_value | Length | GC_content | Group |
+  | :-------: | :------: | :---: | :-----: | :----: | :--------: | :---: |
+  | @9154e0a0 |  0.935   | 0.065 | 11.857  |  316   |   0.503    | R1041 |
+  | @fa8f2a80 |  0.948   | 0.052 | 12.877  |  9621  |   0.498    | R1041 |
 
+- `1_Read_accuracy.pdf` - Distribution of estimated read accuracy **(Fig A)**.
 
->![alt text](example/demo/Demo_1.png)
+- `2_Read_length.pdf` - Distribution of read length **(Fig B)**.
 
+- `3_Read_GC_content.pdf` - Distribution of read GC content **(Fig C)**.
 
-
-### observed_quality
-
-- `clean.fastq` - Filtered data, which used for downstream analysis.
-
-- `tmp.sort.bam` - BAM file generated by aligning the filtered data against the reference genome.
-
-- `tmp.sort.bam.bai` - Index for BAM file.
-
-- `homo.txt` - Detailed information for homopolymer identification includes the chromosome, start position, end position, homopolymer  length, base type of homopolymer, matched base number, deleted base number, inserted base number, substituted base number, and read ID for each read.
-
-- `homo_tmp.txt` - Summarized information includes the position of homopolymer in reference,  the number of perfectly matched reads, the total number of mapped read, and the homopolymer feature. 
-
-- `final_observed_accuracy.txt` - Summary of observed accuracy includes the read ID, insertion length, deletion length, substitution length, matched length, observed identification rate, and observed accuracy for each read.
-- ` final_homo_summary.txt` - Accuracy of homopolymer for each base type.
-
-- `Observed_homopolymer_identification.pdf` - Visualization of accuracy of homopolymer identification.
-
-- `Observed_mismatch_proportion.pdf` - Visualization of mismatch proportion.
-
-- `Observed_read_accuracy.pdf` - Visualization of observed accuracy.
+![alt text](example/demo/Demo_1.png)
 
 
 
->![alt text](example/demo/Demo_2.png)
+### 2_Observed_quality
 
+- `Homoploymer_summary.txt` - Accuracy of identification for each homopolymer type (only the length over 3 base pair was calculated, e.g. AAAA and TTTTT).
 
+  | Base | Accuracy | Group |
+  | :--: | :------: | :---: |
+  |  T   |  0.909   | R1041 |
+  |  G   |  0.857   | R1041 |
+  |  A   |  0.907   | R1041 |
+  |  C   |  0.859   | R1041 |
 
+  
 
+- `Observed_information.txt` - Summary of observed accuracy includes the read ID, insertion length, deletion length, substitution length, matched length, observed identification rate, observed accuracy, and sample ID for each read.
 
-### GC_bias
+  |    ID    | Ins  | Del  | Sub  | Mat  |  Iden  |  Acc   | Group |
+  | :------: | :--: | :--: | :--: | :--: | :----: | :----: | :---: |
+  | 70fbffe6 |  3   |  1   |  1   | 354  | 0.9972 | 0.9861 | R1041 |
+  | 96a5c10b |  3   |  11  |  2   | 342  | 0.9942 | 0.9553 | R1041 |
 
-- `BIN.bed` - BIN position (chromosome, start, end) .
+- `XXX_homopolymer_detail.txt` - Detailed information for homopolymer identification includes the chromosome, start position, end position, homopolymer  length, homopolymer type , matched base number, deleted base number, inserted base number, substituted base number, read ID, and sample ID (Read level).
 
-- `BIN.dp` - Base depth for each BIN.
+  |    Chrom    | Start | End  | length | type | Matched base | Deleted base | Inserted base | Substituted  base |  ReadID  | SampleID |
+  | :---------: | :---: | :--: | :----: | :--: | :----------: | :----------: | :-----------: | :---------------: | :------: | :------: |
+  | ecoli_chrom | 3083  | 3086 |   4    |  T   |      4       |      0       |       0       |         0         | c322bcea |   R941   |
+  | ecoli_chrom | 3382  | 3386 |   5    |  A   |      5       |      0       |       0       |         0         | c322bcea |   R941   |
 
-- `GC_content.txt`  - GC content for each BIN.
+- `XXX_homopolymer_in_reference.txt` - Summarized information includes the position of homopolymer in reference,  the number of perfectly matched read, the total number of mapped read, the homopolymer feature, and sample ID (Reference level). 
 
-- `GC_bias_raw.txt`  - Average depth and BIN number for each GC content.
+  |          pos          | num_of_mat | depth | type | Group |
+  | :-------------------: | :--------: | :---: | :--: | :---: |
+  | ecoli_chrom_3083_3086 |     1      |   1   |  4T  | R941  |
+  | ecoli_chrom_3382_3386 |     1      |   1   |  5A  | R941  |
 
-- `final_GC_bias_nor.txt` - Normalized read coverage for selected GC content.
+- `XXX.bam` - BAM file generated by aligning the data against the reference genome.
 
-- `bin_distribution.pdf` - Visualization of number of BINs for each GC content.
+- `XXX.bam.bai` - Index for BAM file.
 
-- `GC_bias.pdf` - Visualization of relationship between normalized depth and GC content.
+- `1_Observed_read_accuracy.pdf` - Distribution of observed read accuracy **(Fig A)**.
 
+- `2_Observed_mismatch_proportion.pdf` - Distribution of mismatch proportion **(Fig B)**.
 
+- `3_Homoploymer_summary.pdf` - Accuracy of homopolymer identification **(Fig C)**.
 
->![alt text](example/demo/Demo_3.png)
+![alt text](example/demo/Demo_2.png)
 
 
 
 
+### 3_GC_bias
 
-### regional_modification
+- `Bin_distribution.txt` - BINs number within each GC content. (GC content,  and Number of BINs)
 
-- `zebraFish_5mC_zebraFish_promoter.bed` - Average modification proportion for each BIN. Here, it is the average 5mC proportion at promoter level. 
+- `XXXX_relationship_raw.txt` - Read coverage for total GC content (GC content, average depth among the BINs, number of BINs, and  sample ID).
 
-- `motif_bin_violin.pdf` - Distribution of modification proportion.
+- `Relationship_normalization` - Normalized read coverage for selected GC content (GC content, average depth, Number of BINs, sample ID, and normalized depth).
 
-- `motif_bin_box.pdf` - Box plot of  modification proportion.
+  | GC_content | Depth | Number | Group | Normalized_depth |
+  | :--------: | :---: | :----: | :---: | :--------------: |
+  |     40     | 7.832 |   55   | R1041 |      1.066       |
+  |     41     | 7.655 |   59   | R1041 |      1.067       |
+
+- `1_Bin_distribution.pdf` - Visualization of BINs number within each GC content **(Fig A)**.
+
+- `2_Relationship_normalization.pdf` -  Relationship between normalized depth and GC content **(Fig B)**.
+
+![alt text](example/demo/Demo_3.png)
 
 
 
->![alt text](example/demo/Demo_4.png)
 
+### 4_Regional_modification
+
+- `XXX.bed` -  Average modification proportion for each BIN (BIN name, average value, and sample ID).
+
+  |      BIN name      | 5mC proportion | Group |
+  | :----------------: | :------------: | :---: |
+  | ENSDARG00000102097 |      0.6       | Blood |
+  | ENSDARG00000099319 |     0.830      | Blood |
+
+- `1_Regional_modification.pdf`
+
+![alt text](example/demo/Demo_4.png)
 
 
 
@@ -254,19 +331,17 @@ results/
 ```mermaid
 graph TD
 	A(raw signal) -.-> |Basecall| B(FASTA)
-	A(raw signal) -.-> |Basecall| C(modificated BED)
-	C(modificated BED) --> |modibin| D(modification distribution)
-	B(FASTA) --> |estimate|e(estimated accuracy)
-	B(FASTA) --> |observe| f(clean reads)
-	f(clean reads) --> |observe| g(aligned BAM)
+	A(raw signal) -.-> |Basecall| C(modificated file)
+	C(modificated files) --> |modbin| D(Modification distribution)
+	B(sequence reads) --> |estimate|e(Estimated table)
+	e(Estimated table) --> f(Estimated accuracy)
+	e(Estimated table) --> l(Read length)
+	e(Estimated table) --> x(Read GC content)
 	
-	g(aligned BAM) --> |observe|h(homopolymer identification)
- 	g(aligned BAM) --> |observe|i(observed accuracy)
-	g(aligned BAM) --> |gcbias|j(GC bias) 
+	B(sequence reads) --> |observe|g(Aligned files)
+	
+	g(Aligned files) --> |observe|h(Homopolymer identification)
+ 	g(Aligned files) --> |observe|i(Observed accuracy)
+ 	g(Aligned files) --> |observe|c(Mismatch proportion)
+	g(Aligned files) --> |gcbias|j(GC bias comparison) 
 ```
-
-
-
-## Developing
-
-- run the homopolymer identification with multi processes.
