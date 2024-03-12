@@ -1,5 +1,3 @@
-# Giraffe_View 
-
 **Giraffe_View** is specially designed to provide a comprehensive assessment of the accuracy of long-read sequencing datasets obtained from both the PacBio and Nanopore platforms. 
 
 
@@ -12,7 +10,7 @@
 
 
 
-## Installation
+# Installation
 
 Before using this tool, you need to install additional dependencies for read processing, including the [samtools](https://www.htslib.org/)，[minimap2](https://github.com/lh3/minimap2), and [bedtools](https://github.com/arq5x/bedtools2). The following commands can help you install both the software package and its dependencies.
 
@@ -25,7 +23,7 @@ If you are unfamiliar with the process of installing `conda`, you can refer to t
 
 
 
-## General Usage
+# General Usage
 
 The `giraffe` can be run using following  commands:
 
@@ -53,7 +51,11 @@ optional arguments:
 
 The available sub-commands are:
 
-### estimate  
+
+
+
+
+## estimate  
 
 ```shell
 giraffe estimate -h
@@ -82,7 +84,9 @@ R3 ONT test/reads/S3.fastq
 
 
 
-### observe
+
+
+## observe
 
 ```shell
 giraffe observe -h
@@ -105,7 +109,9 @@ optional arguments:
 
 
 
-### gcbias
+
+
+## gcbias
 
 ```shell
 giraffe gcbias -h
@@ -139,7 +145,9 @@ R3 ONT test/reads/S3.bam
 
 
 
-### modbin
+
+
+## modbin
 
 ```shell
 giraffe modbin -h
@@ -181,7 +189,9 @@ optional arguments:
 
 
 
-## Results 
+
+
+# Results 
 
 if you run the demo data in the example, you will obtain a fold named **Giraffe_Results** with following structure.
 
@@ -221,7 +231,9 @@ Giraffe_Results/
 
 
 
-### 1_Estimated_quality
+
+
+## 1_Estimated_quality
 
 - `Estimated_information.txt` -  File with read ID, estimated read accuracy, estimate read error, Q Score, GC content, read length and sample ID.
 
@@ -240,7 +252,9 @@ Giraffe_Results/
 
 
 
-### 2_Observed_quality
+
+
+## 2_Observed_quality
 
 - `Homoploymer_summary.txt` - Accuracy of identification for each homopolymer type (only the length over 3 base pair was calculated, e.g. AAAA and TTTTT).
 
@@ -288,7 +302,9 @@ Giraffe_Results/
 
 
 
-### 3_GC_bias
+
+
+## 3_GC_bias
 
 - `Bin_distribution.txt` - BINs number within each GC content. (GC content,  and Number of BINs)
 
@@ -309,7 +325,9 @@ Giraffe_Results/
 
 
 
-### 4_Regional_modification
+
+
+## 4_Regional_modification
 
 - `XXX.bed` -  Average modification proportion for each BIN (BIN name, average value, and sample ID).
 
@@ -324,7 +342,9 @@ Giraffe_Results/
 
 
 
-## Workflow
+
+
+# Workflow
 
 ```mermaid
 graph TD
