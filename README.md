@@ -168,7 +168,7 @@ optional arguments:
 
 - `list` - a table with your sample ID, sequencing platforms (ONT/Pacbio), and path of your files with methylation information, please using the SPACE(" ") to gap them. 
 
-- ```shell
+   ```shell
    # A example of file list
    R1 ONT test/reads/5mC_S1.txt
    R2 Pacbio test/reads/5mC_S2.txt
