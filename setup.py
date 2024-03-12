@@ -5,11 +5,10 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
   name="Giraffe_View",
-  version="0.0.9.4",
+  version="0.1.0.0",
   author="Xudong Liu",
   author_email="xudongliu98@gmail.com",
-  description="A small tool help assess and visualize the accuracy of a sequencing dataset, \
-  	specifically for Oxford Nanopore Technologies (ONT) long-read sequencing.",
+  description="Giraffe_View is specially designed to provide a comprehensive assessment of the accuracy of long-read sequencing datasets obtained from both the PacBio and Nanopore platforms.",
   long_description=long_description,
   long_description_content_type="text/markdown",
   url="https://github.com/lxd98/Giraffe_View",
@@ -19,7 +18,7 @@ setuptools.setup(
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
   ],
-  python_requires = '>=3.7, <=3.10',
+  python_requires = '>=3.7, <=3.11',
   install_requires=[
   'pysam >= 0.17.0',
   'plotnine >= 0.12.1',
