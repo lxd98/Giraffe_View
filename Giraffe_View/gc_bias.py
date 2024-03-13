@@ -3,7 +3,6 @@ from os import system
 import pandas as pd
 from Giraffe_View.function import cmd_shell
 
-
 def compute_GC_bias(ref, bamfile, binsize, sample_ID):
 	def get_bin_bed():
 		with open("tmp.sh","w") as bash_file:

@@ -1,7 +1,7 @@
 import pysam
 import re
-from Giraffe_View.function import *
 from os import system 
+from Giraffe_View.function import *
 
 def data_process(sample_ID, data_type, data_path, ref, threads=10):
     # Define the commands as a list of strings to avoid issues with spaces

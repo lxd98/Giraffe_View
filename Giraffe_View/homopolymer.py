@@ -5,7 +5,6 @@ import re
 import multiprocessing
 from Giraffe_View.function import *
 
-
 def homopolymer_from_bam(input_bamfile, sample_ID):
 	bamfile = pysam.AlignmentFile(input_bamfile, threads=4)
 	dir_polymer = {}

@@ -90,7 +90,7 @@ def methylation(args):
 
 	input_dataset = loading_dataset(args.input)
 	for data in input_dataset.keys():
-		methylation_calculation(input_dataset[data]["path"], args.bed, args.cpu, data)
+		methylation_calculation(input_dataset[data]["path"], args.pos, args.cpu, data)
 
 	if args.plot:
 		print_with_color("Start plotting!")
@@ -128,7 +128,7 @@ if __name__ == '__main__':
 
 	methylation_parser = subparsers.add_parser('modbin', help='Average modification proportion at regional level.')
 	methylation_parser.add_argument("--input", type=str, metavar="<list>", required=True, help="input list of modificated file")
-	methylation_parser.add_argument("--bed", type=str, metavar="<reference>", required=True, help="input position file with CSV format")
+	methylation_parser.add_argument("--pos", type=str, metavar="<reference>", required=True, help="input position file with CSV format")
 	methylation_parser.add_argument("--cpu", type=int, metavar="<number>", required=False, help="number of CPU (default:10)", default=10)
 	methylation_parser.add_argument("--plot", required=False, help="results visualization", action='store_true')
 
