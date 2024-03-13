@@ -27,28 +27,33 @@ def plot_estimate():
 		acc_scale = [0,100]
 		acc_breaks = [i for i in range(0, 101, 10)]
 
-	Acc = (ggplot(df, aes(x="Accuracy", fill="Group")) + 
+	Acc = (
+		ggplot(df, aes(x="Accuracy", fill="Group")) + 
 			geom_density(adjust=1, size=0.5, alpha=0.5) +
             scale_x_continuous(name="Estimated read accuracy (%)",
             	limits=acc_scale, breaks=acc_breaks) + 
             scale_y_continuous(name="Probability Density Function (PDF)") + 
-            theme_bw() + xlab("") +
+            theme_classic() + xlab("") +
             theme(axis_text=element_text(size=12, color="black"),
                   axis_title=element_text(size=12, color="black"),
                   legend_text = element_text(size=12, color="black"),
-                  legend_title = element_text(size=12, color="black"),
-                  legend_position = (0.05, 0.95)))
+                  legend_title = element_blank(),
+                  legend_position = "right")
+            )
 
-	GC_content=(ggplot(df, aes(x="Group", y="GC_content", fill="Group")) + 
-			geom_boxplot(alpha=0.5, width=0.2, outlier_size=0.35) +
+	GC_content=(
+		ggplot(df, aes(x="Group", y="GC_content", fill="Group")) + 
+			geom_boxplot(alpha=0.5, width=0.2, outlier_shape='') + 
+			 # outlier_size=0.35) +
             scale_y_continuous(name="GC content (%)", 
             	limits=(0,101), breaks=[i for i in range(0,101,10)]) + 
-            theme_bw() +
+            theme_classic() +
             theme(axis_text_x=element_text(size=12, color="black", angle=45),
             	axis_text_y=element_text(size=12, color="black"),
-                axis_title_x=element_blank(),
- 				axis_title_y=element_text(size=12, color="black"),
-                legend_position = False))
+                	axis_title_x=element_blank(),
+ 			axis_title_y=element_text(size=12, color="black"),
+                	legend_position = 'none')
+            )
 	
 	ave = df["Length"].mean()
 
@@ -71,17 +76,19 @@ def plot_estimate():
 		len_scale = [0,100]
 		len_breaks = [i for i in range(0, 101, 10)]
 
-	Length = (ggplot(df, aes(x="Length", fill="Group")) + 
+	Length = (
+		ggplot(df, aes(x="Length", fill="Group")) + 
 			geom_density(adjust=1, size=0.5, alpha=0.5) +
             scale_x_continuous(name="Read length (Kb)", 
             	limits=len_scale, breaks=len_breaks) + 
             scale_y_continuous(name="Probability Density Function (PDF)") + 
-            theme_bw() + xlab("") +
+            theme_classic() + xlab("") +
             theme(axis_text=element_text(size=12, color="black"),
                   axis_title=element_text(size=12, color="black"),
                   legend_text = element_text(size=12, color="black"),
-                  legend_title = element_text(size=12, color="black"),
-                  legend_position = (0.95, 0.95)))
+                  legend_title = element_blank(),
+                  legend_position = "right")
+            )
 
 	Acc.save(filename = "1_Read_accuracy.pdf", 
 		width=8, height=6, dpi=300, path="Giraffe_Results/1_Estimated_quality")
@@ -115,12 +122,13 @@ def plot_observe_acc():
 	    	scale_x_continuous(name="Observed read accuracy (%)", 
 	    		limits=acc_scale, breaks=acc_breaks) +
 	    	scale_y_continuous(name="Probability Density Function (PDF)") +
-	    	theme_bw() + 
+	    	theme_classic() + 
             theme(axis_text=element_text(size=12, color="black"),
                   axis_title=element_text(size=12, color="black"),
                   legend_text = element_text(size=12, color="black"),
-                  legend_title = element_text(size=12, color="black"),
-                  legend_position = (0.05, 0.95)))
+                  legend_title = element_blank(),
+                  legend_position = "right")
+            )
 
 	Acc.save(filename = "1_Observed_read_accuracy.pdf", 
 		width=8, height=6, dpi=300, path="Giraffe_Results/2_Observed_quality/")
@@ -144,14 +152,18 @@ def plot_observe_acc():
 
 	Mis = (
 		ggplot(df1, aes(x="variable", y="value", fill="Group")) + 
-			geom_boxplot(alpha=0.5, width=0.2, outlier_size=0.35) +
-			theme_bw() +
+			geom_boxplot(alpha=0.5, width=0.2, outlier_shape='') +
+				# outlier_size=0.35) +
+			theme_classic() +
 	    	scale_y_continuous(name="Mismatch proportion (%)",breaks=mis_breaks) +
 	    	scale_x_discrete(name="Mismatch type", 
 	    		labels=["Deletion", "Insertion", "Substitution"]) +
 	    	theme(axis_text=element_text(size=12, color="black"),
-	        	  axis_title=element_text(size=12, color="black"),
-	        	  axis_title_x=element_blank())
+	        	axis_title_y=element_text(size=12, color="black"),
+	        	axis_title_x=element_blank(),
+	        	legend_text = element_text(size=12, color="black"),
+	        	legend_title = element_blank(),
+	        	legend_position = "right")
 		)
 
 	Mis.save(filename = "2_Observed_mismatch_proportion.pdf",
@@ -181,9 +193,14 @@ def plot_observe_homo():
 			geom_point(size=3, color="black", alpha=.8) +
 		    scale_y_continuous(name="Accuracy of homopolymer identification (%)", 
 		    	limits=homo_scale, breaks =homo_breaks) +
-		    xlab("Base") + theme_bw() + 
+		    xlab("Base") + theme_classic() + 
 		    theme(axis_text=element_text(size=12, color="black"),
-		          axis_title=element_text(size=12, color="black")))
+		          axis_title_y=element_text(size=12, color="black"),
+		          axis_title_x=element_blank(),
+		          legend_text = element_text(size=12, color="black"),
+		          legend_title = element_blank(),
+		          legend_position = "right")
+		    )
 
 	Homo.save(filename = "3_Homoploymer_summary.pdf", 
 		width=8, height=6, dpi=300, path="Giraffe_Results/2_Observed_quality/")
@@ -193,14 +210,16 @@ def plot_GC_bias():
 	accurac_scale = [0,100]
 	accurac_break = [i for i in range(0, 101, 10)]
 
-	distribution_len=(ggplot(df, aes(x="GC_content", y="Number")) + 
+	distribution_len=(
+		ggplot(df, aes(x="GC_content", y="Number")) + 
 			geom_line(size=1.5, color="#96D1E8", alpha=.3) + 
 			geom_point(size=1.5, fill="#96D1E8", color="black") +
             scale_x_continuous(name = "GC content (%)", 
             	limits=accurac_scale, breaks =accurac_break) +
-            scale_y_continuous(name="Number of bins") + theme_bw() +
+            scale_y_continuous(name="Number of bins") + theme_classic() +
             theme(axis_text=element_text(size=12, color="black"),
-                  axis_title=element_text(size=12, color="black")))
+                  axis_title=element_text(size=12, color="black"))
+            )
 
 	df1=pd.read_csv("Giraffe_Results/3_GC_bias/Relationship_normalization.txt", sep="\t")
 
@@ -214,22 +233,28 @@ def plot_GC_bias():
 	else:
 		gc_breaks = [i for i in range(0, 101, 10)]
 
-	GC_bias=(ggplot(df1, aes(x="GC_content", y="Normalized_depth", 
+	GC_bias=(
+		ggplot(df1, aes(x="GC_content", y="Normalized_depth", 
 			group="Group", fill="Group", color="Group")) + 
 			geom_hline(aes(yintercept=1), color="grey", linetype="dotted") + 
 			geom_line(size=1.5, alpha=.3) + 
 			geom_point(size=1.5,color="black") +
 			scale_y_continuous(name="Normalized depth", 
 				limits=[0, 2], breaks=np.arange(0, 2.1, 0.2)) +
-			theme_bw() + 
+			theme_classic() + 
 			scale_x_continuous(name="GC content (%)", breaks=gc_breaks) +
             theme(axis_text=element_text(size=12, color="black"),
-                  axis_title=element_text(size=12, color="black")))
+                  axis_title=element_text(size=12, color="black"),
+                  legend_title = element_blank(),
+                  legend_text = element_text(size=12, color="black"),
+                  legend_position = "bottom"
+                  )
+            )
 
 	distribution_len.save(filename = "1_Bin_distribution.pdf", 
 		width=8, height=3, dpi=300, path="Giraffe_Results/3_GC_bias")
 	GC_bias.save(filename = "2_Relationship_normalization.pdf", 
-		width=8, height=3, dpi=300, path="Giraffe_Results/3_GC_bias")
+		width=8, height=5, dpi=300, path="Giraffe_Results/3_GC_bias")
 
 def plot_modi_bin():
 	system('cat Giraffe_Results/4_Regional_modification/*bed | grep -v -w "nan" \
@@ -256,10 +281,10 @@ def plot_modi_bin():
 			geom_violin(position = position_nudge(x = .2), alpha = 0.7, adjust = 0.5, style="right") + 
 			coord_flip() +
 			scale_y_continuous(name="Modification proportion (%)",
-				breaks=Breaks) + xlab("") + theme_bw() +
+				breaks=Breaks) + xlab("") + theme_classic() +
 			theme(axis_text=element_text(size=12, color="black"),
-                  axis_title=element_text(size=15, color="black"),
-                  legend_position=False)
+                  axis_title=element_text(size=12, color="black"),
+                  legend_position = 'none')
 		)
 
 
