@@ -65,7 +65,7 @@ giraffe gcbias --input {bam_list.txt} --ref {genome.fa} --plot
 
 `bam_list.txt` -  a table with your sample ID, sequencing platforms, and path of your alignment files (**sam/bam** format).
 
-```python
+```shell
 # A demo of bam_list.txt
 # Note: please use the SPACE(" ") to gap them.
 # If you have used the observe function to process your data, the resulting bam files can be used as the input.
@@ -84,7 +84,7 @@ giraffe modbin --input {methylation_list.txt} --pos {promoter.csv} --cpu 4 --plo
 
 `bam_list.txt` -  a table with your sample ID, sequencing platforms, and path of your methylation profiling files (**bed** format).
 
-```python
+```shell
 # A demo of methylation_list.txt
 # Note: please use the SPACE(" ") to gap them.
 R1 ONT test/reads/5mC_S1.txt
