@@ -27,175 +27,123 @@ If you are unfamiliar with the process of installing `conda`, you can refer to t
 
 # General Usage
 
-The `giraffe` can be run using following  commands:
-
-```shell
-giraffe -h
-```
-
-```shell
-usage: giraffe [-h] {estimate,observe,gcbias,modbin} ...
-
-A tool to help you assess the quality of long-read sequencing data.
-
-positional arguments:
-  {estimate,observe,gcbias,modbin}
-    estimate            Estimated accuracy, length, and GC content.
-    observe             Observed accuracy, mismatch proportion, and homopolymer identification.
-    gcbias              Relationship between GC content and sequencing depth.
-    modbin              Average modification proportion at regional level.
-
-optional arguments:
-  -h, --help            show this help message and exit
-```
-
-
-
-The available sub-commands are:
-
-
-
-
+The `giraffe` can be run using the following commands.
 
 ## estimate  
 
 ```shell
-giraffe estimate -h
+giraffe estimate --input {read_list.txt} --cpu 4 --plot 
 ```
 
-```shell
-usage: giraffe estimate [-h] --input <file list> [--cpu <number>] [--plot]
+`read_list.txt` - a table with your sample ID, sequencing platforms (**ONT/Pacbio**), and path of your sequencing reads (**FASTQ** format).
 
-options:
-  -h, --help           show this help message and exit
-  --input <file list>  input the file list
-  --cpu <number>       number of cpu (default:10)
-  --plot               results visualization
+```python
+# A demo of read_list.txt
+# Note: please use the SPACE(" ") to gap them.
+R1 ONT /home/user/test/reads/S1.fastq
+R2 Pacbio /home/user/test/reads/S2.fastq
+R3 ONT /home/user/test/reads/S3.fastq
 ```
-
-`file list` - a table with your sample ID, sequencing platforms (ONT/Pacbio), and path of your datasets **(FASTQ format)**, please using the SPACE(" ") to gap them.
-
-`cpu` - number of CPUs will be used during processing.
-
-```shell
-# A example of file list
-R1 ONT test/reads/S1.fastq
-R2 Pacbio test/reads/S2.fastq
-R3 ONT test/reads/S3.fastq
-```
-
-
 
 
 
 ## observe
 
 ```shell
-giraffe observe -h
+giraffe observe --input {read_list.txt} --ref {genome.fa} --cpu 4 --plot 
 ```
 
-```shell
-usage: giraffe observe [-h] --input <file list> --ref <reference> [--cpu <number>] [--plot]
-
-optional arguments:
-  -h, --help           show this help message and exit
-  --input <file list>  input the file list
-  --ref <reference>    input reference
-  --cpu <number>       number of CPU (default:10)
-  --plot               results visualization
-```
-
-- `file list` - a table same with the above one.
-- `reference` - reference file in FASTA format.
-- `cpu` - number of CPUs will be used during processing.
-
-
+`read_list.txt` -  a table the same as the above one.
 
 
 
 ## gcbias
 
 ```shell
-giraffe gcbias -h
+giraffe gcbias --input {bam_list.txt} --ref {genome.fa} --plot 
 ```
 
-```shell
-usage: giraffe gcbias [-h] --ref <reference> --input <list> [--binsize] [--plot]
+`bam_list.txt` -  a table with your sample ID, sequencing platforms, and path of your alignment files (**sam/bam** format).
 
-optional arguments:
-  -h, --help         show this help message and exit
-  --ref <reference>  input reference file
-  --input <list>     input the list of bam/sam file
-  --binsize          input bin size (default:1000)
-  --plot             results visualization
+```python
+# A demo of bam_list.txt
+# Note: please use the SPACE(" ") to gap them.
+# If you have used the observe function to process your data, the resulting bam files can be used as the input.
+R1 ONT /home/user/test/Giraffe_Results/2_Observed_quality/S1.bam
+R2 Pacbio /home/user/test/Giraffe_Results/2_Observed_quality/S2.bam
+R3 ONT /home/user/test/Giraffe_Results/2_Observed_quality/S3.bam
 ```
-
-- `file list` - a table with your sample ID, sequencing platforms (ONT/Pacbio), and path of your alignment files **(sam/bam format)**, please using the SPACE(" ") to gap them. 
-
-  **P.S.** If you have used the observe function to process your data, the resulting bam file can be used as the input.
-
-- `reference` - the reference file.
-
-- `binsize` - the length of BIN. The BIN is the unit to count the read coverage and GC content (e.g. 3000 or 5000).
-
-```shell
-# A example of file list
-R1 ONT test/reads/S1.bam
-R2 Pacbio test/reads/S2.bam
-R3 ONT test/reads/S3.bam
-```
-
-
 
 
 
 ## modbin
 
 ```shell
-giraffe modbin -h
+giraffe modbin --input {methylation_list.txt} --pos {promoter.csv} --cpu 4 --plot
 ```
+
+`bam_list.txt` -  a table with your sample ID, sequencing platforms, and path of your methylation profiling files (**bed** format).
+
+```python
+# A demo of methylation_list.txt
+# Note: please use the SPACE(" ") to gap them.
+R1 ONT test/reads/5mC_S1.txt
+R2 Pacbio test/reads/5mC_S2.txt
+R3 ONT test/reads/5mC_S3.txt
+
+# A demo of your methylation file (e.g. 5mC_S1.txt).
+# Please use the tab ("\t") to gap the column.
+# chromosome start end methylation_proportion
+chr1	81	83	0.8
+chr1	21314	21315	0.3
+chr1	32421	32422	0.85
+
+# A demo of promoter.csv
+#chromosome, start, end, geneID
+chr1,12027,17027,ENSDARG00000099104
+chr1,6822,11822,ENSDARG00000102407
+
+# Note: there is no Header for all tables.
+```
+
+
+
+# Example
+
+Here, we provide demo datasets for testing the `giraffe`. The following commands can help to download them.
 
 ```shell
-usage: giraffe modbin [-h] --input <list> --bed <reference> [--cpu <number>] [--plot]
+# The input file list
+wget https://figshare.com/ndownloader/files/44967445 -O fastq.list
+wget https://figshare.com/ndownloader/files/44967442 -O bed.list
+wget https://figshare.com/ndownloader/files/44967499 -O bam.list
 
-optional arguments:
-  -h, --help         show this help message and exit
-  --input <list>     input list of modificated file
-  --bed <reference>  input position file with CSV format
-  --cpu <number>     number of CPU (default:10)
-  --plot             results visualization
+# The reference and ONT reads (R10.4.1 and R9.4.1) of E.coli
+wget https://figshare.com/ndownloader/files/44967436 -O Read.tar.gz
+
+# The 5mC methylation files of zebrafish blood and kidney samples.
+# The position file is the gene promoter region in chromosome 1. 
+wget https://figshare.com/ndownloader/files/44967427 -O Methylation.tar.gz
+
+tar -xzvf Read.tar.gz
+tar -xzvf Methylation.tar.gz
+rm Read.tar.gz Methylation.tar.gz
 ```
 
-- `list` - a table with your sample ID, sequencing platforms (ONT/Pacbio), and path of your files with methylation information, please using the SPACE(" ") to gap them. 
+Please run the following commands to start data analysis!
 
-   ```shell
-   # A example of file list
-   R1 ONT test/reads/5mC_S1.txt
-   R2 Pacbio test/reads/5mC_S2.txt
-   R3 ONT test/reads/5mC_S3.txt
-   
-   # A example of your methylation file with four columns (three columns for position, one for methylation value).  
-   # Please use the tab ("\t") to gap the column instead of the space (" ").
-   # chrom	start	end	value
-   chr1	81	83	0.8
-   chr1	21314	21315	0.3
-   chr1	32421	32422	0.85
-   ```
-
-- `reference` - a CSV file with target regions (chromosome, start, end, ID)
-
-   ```shell
-   chr1,0,100000,bin1
-   chr1,100000,200000,bin2
-   ```
-
-
+```shell
+giraffe estimate --input fastq.list --plot --cpu 4
+giraffe observe --input fastq.list --plot --cpu 4 --ref Read/ecoli_chrom.fa
+giraffe gcbias --input bam.list --plot --ref Read/ecoli_chrom.fa
+giraffe modbin --input bed.list --cpu 4 --plot --bed Methylation/zf_promoter.db
+```
 
 
 
 # Results 
 
-if you run the demo data in the example, you will obtain a fold named **Giraffe_Results** with following structure.
+if you run the demo data in the example, you will obtain a fold named **Giraffe_Results** with the following structure.
 
 ```shell
 Giraffe_Results/
