@@ -1,4 +1,4 @@
-# Giraffe View
+Giraffe View
 
 **Giraffe_View** is specially designed to provide a comprehensive assessment of the accuracy of long-read sequencing datasets obtained from both the PacBio and Nanopore platforms. 
 
@@ -17,6 +17,11 @@
 Before using this tool, you need to install additional dependencies for read processing, including the [samtools](https://www.htslib.org/)，[minimap2](https://github.com/lh3/minimap2), and [bedtools](https://github.com/arq5x/bedtools2). The following commands can help you install both the software package and its dependencies.
 
 ```shell
+# Testing version
+# samtools 1.17
+# minimap2 2.17-r941
+# bedtools 2.30.0
+
 conda install -c bioconda -c conda-forge samtools minimap2 bedtools -y
 pip install Giraffe-View
 ```
@@ -32,10 +37,10 @@ The `giraffe` can be run using the following commands.
 ## estimate  
 
 ```shell
-giraffe estimate --input {read_list.txt} --cpu 4 --plot 
+giraffe estimate --input read_list.txt --cpu 4 --plot 
 ```
 
-`read_list.txt` - a table with your sample ID, sequencing platforms (**ONT/Pacbio**), and path of your sequencing reads (**FASTQ** format).
+`read_list.txt` - a table with your sample ID, sequencing platforms (**ONT/Pacbio** for DNA, **ONT_RNA** for direct sequencing RNA), and path of your sequencing reads (**FASTQ** format).
 
 ```python
 # A demo of read_list.txt
@@ -50,7 +55,7 @@ R3 ONT /home/user/test/reads/S3.fastq
 ## observe
 
 ```shell
-giraffe observe --input {read_list.txt} --ref {genome.fa} --cpu 4 --plot 
+giraffe observe --input read_list.txt --ref genome.fa --cpu 4 --plot 
 ```
 
 `read_list.txt` -  a table the same as the above one.
@@ -60,12 +65,12 @@ giraffe observe --input {read_list.txt} --ref {genome.fa} --cpu 4 --plot
 ## gcbias
 
 ```shell
-giraffe gcbias --input {bam_list.txt} --ref {genome.fa} --plot 
+giraffe gcbias --input bam_list.txt --ref genome.fa --plot 
 ```
 
 `bam_list.txt` -  a table with your sample ID, sequencing platforms, and path of your alignment files (**sam/bam** format).
 
-```shell
+```python
 # A demo of bam_list.txt
 # Note: please use the SPACE(" ") to gap them.
 # If you have used the observe function to process your data, the resulting bam files can be used as the input.
@@ -79,12 +84,12 @@ R3 ONT /home/user/test/Giraffe_Results/2_Observed_quality/S3.bam
 ## modbin
 
 ```shell
-giraffe modbin --input {methylation_list.txt} --pos {promoter.csv} --cpu 4 --plot
+giraffe modbin --input methylation_list.txt --pos promoter.csv --cpu 4 --plot
 ```
 
 `bam_list.txt` -  a table with your sample ID, sequencing platforms, and path of your methylation profiling files (**bed** format).
 
-```shell
+```python
 # A demo of methylation_list.txt
 # Note: please use the SPACE(" ") to gap them.
 R1 ONT test/reads/5mC_S1.txt
@@ -136,7 +141,7 @@ Please run the following commands to start data analysis!
 giraffe estimate --input fastq.list --plot --cpu 4
 giraffe observe --input fastq.list --plot --cpu 4 --ref Read/ecoli_chrom.fa
 giraffe gcbias --input bam.list --plot --ref Read/ecoli_chrom.fa
-giraffe modbin --input bed.list --cpu 4 --plot --bed Methylation/zf_promoter.db
+giraffe modbin --input bed.list --cpu 4 --plot --pos Methylation/zf_promoter.db
 ```
 
 
@@ -179,7 +184,7 @@ Giraffe_Results/
     └── Kidney.bed
 ```
 
-
+![alt text](example/demo/demo.png)
 
 
 
@@ -194,13 +199,9 @@ Giraffe_Results/
 
 - `1_Read_accuracy.pdf` - Distribution of estimated read accuracy **(Fig A)**.
 
-- `2_Read_length.pdf` - Distribution of read length **(Fig B)**.
+- `2_Read_length.pdf` - Distribution of read length **(Fig C)**.
 
-- `3_Read_GC_content.pdf` - Distribution of read GC content **(Fig C)**.
-
-![alt text](example/demo/Demo_1.png)
-
-
+- `3_Read_GC_content.pdf` - Distribution of read GC content **(Fig B)**.
 
 
 
@@ -242,13 +243,11 @@ Giraffe_Results/
 
 - `XXX.bam.bai` - Index for BAM file.
 
-- `1_Observed_read_accuracy.pdf` - Distribution of observed read accuracy **(Fig A)**.
+- `1_Observed_read_accuracy.pdf` - Distribution of observed read accuracy **(Fig D)**.
 
-- `2_Observed_mismatch_proportion.pdf` - Distribution of mismatch proportion **(Fig B)**.
+- `2_Observed_mismatch_proportion.pdf` - Distribution of mismatch proportion **(Fig E)**.
 
-- `3_Homoploymer_summary.pdf` - Accuracy of homopolymer identification **(Fig C)**.
-
-![alt text](example/demo/Demo_2.png)
+- `3_Homoploymer_summary.pdf` - Accuracy of homopolymer identification **(Fig F)**.
 
 
 
@@ -267,11 +266,9 @@ Giraffe_Results/
   |     40     | 7.832 |   55   | R1041 |      1.066       |
   |     41     | 7.655 |   59   | R1041 |      1.067       |
 
-- `1_Bin_distribution.pdf` - Visualization of BINs number within each GC content **(Fig A)**.
+- `1_Bin_distribution.pdf` - Visualization of BINs number within each GC content **(Fig G)**.
 
-- `2_Relationship_normalization.pdf` -  Relationship between normalized depth and GC content **(Fig B)**.
-
-![alt text](example/demo/Demo_3.png)
+- `2_Relationship_normalization.pdf` -  Relationship between normalized depth and GC content **(Fig H)**.
 
 
 
@@ -286,11 +283,67 @@ Giraffe_Results/
   | ENSDARG00000102097 |      0.6       | Blood |
   | ENSDARG00000099319 |     0.830      | Blood |
 
-- `1_Regional_modification.pdf`
-
-![alt text](example/demo/Demo_4.png)
+- `1_Regional_modification.pdf` - genomic regional methylation proportion **(Fig I)**.
 
 
+
+# Additional scripts
+
+Here, we provide some scripts with user to understanding their data better.
+
+#### homopolymer_count
+
+```shell
+# A script that counts the position and type of homopolymer in  reference
+# if you download the example data, you can run following cammond.
+homopolymer_count --ref Read/ecoli_chrom.fa > Read/ecoli_chrom.homopolymer.txt
+
+# Output
+# chromosome start end base_type feature
+ecoli_chrom	2	4	T	3T
+ecoli_chrom	24	26	T	3T
+ecoli_chrom	32	34	C	3C
+ecoli_chrom	85	87	A	3A
+ecoli_chrom	92	94	T	3T
+ecoli_chrom	139	141	A	3A
+ecoli_chrom	145	147	A	3A
+```
+
+
+
+#### renormalization_sequencing_bias
+
+```shell
+# A script provides a solution for renormalizing the sequencing depth based on the given GC content scale.
+# Here, we seclected the bins within 30% to 60% GC content to renomalization in our demo data. 
+renormalization_sequencing_bias -i Giraffe_Results/3_GC_bias/R941_relationship_raw.txt -l 30 -r 60 -o renorm.txt
+
+# Output
+GC_content	Depth	Number	Group	Normalized_depth
+30	10.913	8	R941	0.9739095164943401
+31	11.4585	8	R941	1.0225916058600197
+32	12.424866666666668	15	R941	1.1088331245157133
+33	12.4052	10	R941	1.107078010997488
+34	10.8758125	16	R941	0.9705907901913406
+35	11.2746875	16	R941	1.006187615848051
+36	12.220117647058824	17	R941	1.090560695422983
+37	11.645590909090908	22	R941	1.0392881711320083
+38	10.52416	25	R941	0.9392082449472257
+```
+
+
+
+#### replot_sequencing_bias
+
+```shell
+# A script to replot the figure of relatiob between renormalized sequencing depth and GC content.
+replot_sequencing_bias -i renorm.txt -o renorm
+
+# Output
+# A figure named renorm.pdf
+```
+
+![alt text](example/demo/renorm.png)
 
 
 
