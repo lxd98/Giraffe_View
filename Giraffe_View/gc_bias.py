@@ -100,11 +100,11 @@ def merge_GC_content_and_depth(binsize, sample_ID):
 		ff.write(str(i) + "\t" + str(ave_dp) + "\t" + str(len(tmp)) + "\t" + str(sample_ID) + "\n")
 	ff.close()
 
-	# get the 95% data for downstream normalization
+	# get the 90% data for downstream normalization
 	df = pd.read_csv(output_file, delim_whitespace=True)
 	max_number = df["Number"].max()
 	total_number = df["Number"].sum()
-	porportion = 0.95
+	porportion = 0.90
 	tmp = df[df["Number"] == max_number].copy()
 	
 	if len(tmp) == 1:
@@ -118,7 +118,7 @@ def merge_GC_content_and_depth(binsize, sample_ID):
 				nor_df = t1
 				break
 			else:
-				start -= 2
+				start -= 1
 				end += 1
 				continue
 

@@ -264,7 +264,7 @@ def plot_modi_bin():
 		sep="\t", names=["ID", "Value", "Group"])
 	
 	df=df.dropna()
-	df["Value"] = df["Value"] * 100
+	df["Value"] = df["Value"]*100
 	diff = df["Value"].max() - df["Value"].min()
 
 	if diff <= 20:

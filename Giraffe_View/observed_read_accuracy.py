@@ -8,17 +8,22 @@ def data_process(sample_ID, data_type, data_path, ref, threads=10):
     # in file names or command arguments
     # path =  os.getcwd()
 
-    # cmd0 = ["mkdir", "-p", "results/observed_quality"]
-    # cmd1 = ["seqkit", "seq", read, "-m", "200", "-Q", "7", "-g", "-j", str(threads), "-o", "results/observed_quality/clean.fastq"]
     output = "Giraffe_Results/2_Observed_quality/" + str(sample_ID) + ".bam"
     
     if data_type == "ONT":
         cmd1 = ["minimap2", "-ax", "map-ont", "-o", "Giraffe_Results/2_Observed_quality/tmp.sam", "--MD", \
         "--secondary=no", "-L", "-t", str(threads), ref, data_path]
 
-    elif data_type == "Pacbio":
-        cmd1 = ["minimap2", "-ax", "map-hifi", "-o", "Giraffe_Results/2_Observed_quality/tmp.sam", "--MD", \
+    elif data_type == "ONT_RNA":
+        cmd1 = ["minimap2", "-ax", "splice", "-uf", "-k14", "-o", "Giraffe_Results/2_Observed_quality/tmp.sam", "--MD", \
         "--secondary=no", "-L", "-t", str(threads), ref, data_path]
+
+    elif data_type == "Pacbio":
+        cmd1 = ["minimap2", "-ax", "map-pb", "-o", "Giraffe_Results/2_Observed_quality/tmp.sam", "--MD", \
+        "--secondary=no", "-L", "-t", str(threads), ref, data_path]
+
+    else:
+        error_with_color("Please check your data type!!! [ONT, Pacbio, ONT_RNA]")
 
     cmd2 = ["samtools", "view", "-bS", "-F4", "-@", str(threads), "-o", "Giraffe_Results/2_Observed_quality/tmp.bam", "Giraffe_Results/2_Observed_quality/tmp.sam"]
     cmd3 = ["samtools", "sort", "-@", str(threads), "-o", output, "Giraffe_Results/2_Observed_quality/tmp.bam"]
