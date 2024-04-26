@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
   name="Giraffe_View",
-  version="0.1.0.13",
+  version="0.1.0.14",
   author="Xudong Liu",
   author_email="xudongliu98@gmail.com",
   description="Giraffe_View is specially designed to provide a comprehensive assessment of the accuracy of long-read sequencing datasets obtained from both the PacBio and Nanopore platforms.",

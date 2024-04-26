@@ -23,6 +23,9 @@ Before using this tool, you need to install additional dependencies for read pro
 # bedtools 2.30.0
 
 conda install -c bioconda -c conda-forge samtools minimap2 bedtools -y
+# or
+conda create -n giraffe -c bioconda -c conda-forge python==3.9 samtools==1.17 minimap2==2.17 bedtools==2.30.0 -y && conda activate giraffe
+
 pip install Giraffe-View
 ```
 
