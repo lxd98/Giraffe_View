@@ -1,0 +1,48 @@
+#!/usr/bin/env python
+from plotnine import * 
+import argparse
+import pandas as pd
+import numpy as np
+import warnings
+warnings.filterwarnings('ignore')
+
+def plot_GC_bias(input_file, output_name):
+	df1=pd.read_csv(input_file, sep="\t")
+
+	dif = df1["GC_content"].max() - df1["GC_content"].min()
+	if dif <= 15:
+		gc_breaks = [i for i in range(0, 101, 1)]
+	elif dif <= 30:
+		gc_breaks = [i for i in range(0, 101, 2)]
+	elif dif <= 50:
+		gc_breaks = [i for i in range(0, 101, 5)]
+	else:
+		gc_breaks = [i for i in range(0, 101, 10)]
+
+	GC_bias=(
+		ggplot(df1, aes(x="GC_content", y="Normalized_depth", 
+			group="Group", fill="Group", color="Group")) + 
+			geom_hline(aes(yintercept=1), color="grey", linetype="dotted") + 
+			geom_line(size=1.5, alpha=.3) + 
+			geom_point(size=1.5,color="black") +
+			scale_y_continuous(name="Normalized depth", 
+				limits=[0, 2], breaks=np.arange(0, 2.1, 0.2)) +
+			theme_classic() + 
+			scale_x_continuous(name="GC content (%)", breaks=gc_breaks) +
+            theme(axis_text=element_text(size=12, color="black"),
+                  axis_title=element_text(size=12, color="black"),
+                  legend_title = element_blank(),
+                  legend_text = element_text(size=12, color="black"),
+                  legend_position = "bottom"
+                  )
+            )
+
+	GC_bias.save(filename = output_name+".pdf", width=8, height=5, dpi=300, path="./")
+
+if __name__ == "__main__":
+	parser = argparse.ArgumentParser(description="")
+	parser.add_argument("-i", "--input", type=str, metavar="", required=True, help="")
+	parser.add_argument("-o", "--out", type=str, metavar="", required=True, help="")
+	args = parser.parse_args()
+
+	plot_GC_bias(args.input, args.out)

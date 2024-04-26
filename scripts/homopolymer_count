@@ -1,0 +1,54 @@
+#!/usr/bin/env python
+
+from Bio import SeqIO
+import argparse
+
+if __name__ == '__main__':
+	parser = argparse.ArgumentParser(description="A script to count the position and type of homopolymer in your reference.")
+	parser.add_argument("--ref", type=str, metavar="", required=True, help="Input reference (FASTA)")
+	args = parser.parse_args()
+
+	database = {}
+	for read in SeqIO.parse(args.ref, "fasta"):
+		# read.id
+		# read.seq
+		database[read.id] = {}
+
+		count = 0
+		number = 1
+		tmp = []
+		frame = ""
+
+		for base in read.seq:
+			if len(tmp) == 0 and frame == "":
+				frame = base.upper()
+				tmp.append(frame)
+				count += 1
+
+			else:
+				if frame == base.upper():
+					tmp.append(frame)
+					count += 1
+				
+				else:
+					if len(tmp) >= 3:
+						database[read.id][str(number)] = {}
+						database[read.id][str(number)]["length"] = len(tmp)
+						database[read.id][str(number)]["position"] = count
+						database[read.id][str(number)]["base"] = tmp[0]
+						number += 1
+					
+					tmp =[]
+					frame = base.upper()
+					tmp.append(frame)
+					count += 1
+
+	for k in database.keys():
+		# ref = string(k)
+		for n in database[k].keys():
+			start = database[k][n]["position"] - database[k][n]["length"] + 1
+			end = database[k][n]["position"]
+			basetype = database[k][n]["base"]
+			feature = str(database[k][n]["length"]) + str(database[k][n]["base"])
+			mes = str(k) + "\t" + str(start) + "\t" + str(end) + "\t" + str(basetype) + "\t" + str(feature)
+			print(mes)

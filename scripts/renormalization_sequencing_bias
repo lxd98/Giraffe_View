@@ -1,0 +1,19 @@
+#!/usr/bin/env python
+
+import argparse
+import pandas as pd
+
+if __name__ == "__main__":
+	parser = argparse.ArgumentParser(description="A script provides a solution for renormalizing the sequencing depth based on the given GC content scale.")
+	parser.add_argument("-i", "--input", type=str, metavar="", required=True, help="input the resulting file")
+	parser.add_argument("-l", "--left", type=int, metavar="", required=True, help="The start of GC content.")
+	parser.add_argument("-r", "--right", type=int, metavar="", required=True, help="The end of GC content.")
+	parser.add_argument("-o", "--out", type=str, metavar="", required=True, help="Name of output file.")
+	args = parser.parse_args()
+
+	df = pd.read_csv(args.input, delim_whitespace=True)
+	nor_df = df[(args.left <=df["GC_content"]) & (df["GC_content"] <= args.right)].copy()
+
+	ave_dp = nor_df["Depth"].mean()
+	nor_df["Normalized_depth"] = nor_df.apply(lambda row: row["Depth"]/ave_dp, axis=1)
+	nor_df.to_csv(args.out, sep="\t", index=False, header=True)
