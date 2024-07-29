@@ -143,7 +143,7 @@ The demo datasets including three E. coli datasets including a 4.2 MB reference,
 
 # Tool showcase
 
-The one-command pattern will generate a summary in [HTML](Results/giraffe_report.html) format. If the scale of the X/Y-axis is not reasonable, the script of `giraffe_plot`  can be used to replot the figure.
+The one-command pattern will generate a summary in [HTML](https://lxd98.github.io/giraffe.github.io) format. If the scale of the X/Y-axis is not reasonable, the script of `giraffe_plot`  can be used to replot the figure.
 
 # Documentation
 
