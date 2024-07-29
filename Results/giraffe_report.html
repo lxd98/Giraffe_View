@@ -1,0 +1,113 @@
+<html>
+<head>
+<title></title>
+<style>
+body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+header { background-color: #4CAF50; color: white; padding: 10px 0; text-align: center; }
+nav { background-color: #f2f2f2; padding: 10px; width: 25%; float: left; height: 100vh; box-sizing: border-box; position: fixed; top: 0; left: 0; }
+main { margin-left: 26%; padding: 10px; }
+nav a { display: block; margin: 10px 0; text-decoration: none; color: #4CAF50; font-weight: bold; }
+nav a:hover { text-decoration: underline; }
+h1, h2, h3, h4 { color: #4CAF50; }
+table { border-collapse: collapse; width: 800px; margin: 20px auto; }
+th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+th { background-color: #f2f2f2; }
+.figure-container { text-align: center; margin: 80px; }
+.figure-container img { width: 800px; height: auto; }
+</style>
+</head>
+<body>
+<header>
+<h1>Giraffe Report</h1>
+</header>
+<nav>
+<h2>Giraffe report</h2>
+<ul>
+<li><a href='#summary_table'>Statistics</a></li>
+<li><a href='#summary_Estimate'>Estimate</a>
+<ul>
+<li><a href='#Estimated accuracy'>Estimated accuracy</a></li>
+<li><a href='#Read GC content'>Read GC content</a></li>
+<li><a href='#Read length'>Read length</a></li>
+</ul>
+</li>
+<li><a href='#summary_Observe'>Observe</a>
+<ul>
+<li><a href='#Observed accuracy'>Observed accuracy</a></li>
+<li><a href='#Mismatch proportion'>Mismatch proportion</a></li>
+<li><a href='#Homopolymer identification'>Homopolymer identification</a></li>
+</ul>
+</li>
+<li><a href='#summary_GC bias'>GC bias</a>
+<ul>
+<li><a href='#Bin distribution'>Bin distribution</a></li>
+<li><a href='#Relationship (depth and GC conetent)'>Relationship (depth and GC conetent)</a></li>
+</ul>
+</li>
+</ul>
+</nav>
+<main>
+<section id='summary_table'>
+<h2>Statistics</h2>
+<div style='text-align: center;'>
+<table>
+<tr><th>Metric</th><th>R941</th><th>R1041</th></tr>
+<tr><td colspan='3'><strong>Estimate (average)</strong></td></tr>
+<tr><td>Estimated read accuracy</td><td>94.54</td><td>97.49</td></tr>
+<tr><td>Read length</td><td>2412.33</td><td>1538.32</td></tr>
+<tr><td>Read GC content</td><td>49.45</td><td>49.38</td></tr>
+<tr><td colspan='3'><strong>Observed (average)</strong></td></tr>
+<tr><td>Observed read accuracy</td><td>94.94</td><td>97.34</td></tr>
+<tr><td>Observed read identification</td><td>98.00</td><td>99.00</td></tr>
+<tr><td>Substitution proportion</td><td>1.91</td><td>1.21</td></tr>
+<tr><td>Insertion proportion</td><td>1.15</td><td>0.54</td></tr>
+<tr><td>Deletion proportion</td><td>2.00</td><td>0.91</td></tr>
+<tr><td>Homopolymer accuracy (A)</td><td>84.16</td><td>90.62</td></tr>
+<tr><td>Homopolymer accuracy (T)</td><td>84.34</td><td>90.72</td></tr>
+<tr><td>Homopolymer accuracy (G)</td><td>76.12</td><td>85.54</td></tr>
+<tr><td>Homopolymer accuracy (C)</td><td>76.12</td><td>85.70</td></tr>
+</table>
+</div>
+</section>
+<h2 id='summary_Estimate'>Estimate</h2>
+<div class='figure-container' id='Estimated accuracy'>
+<img src='Summary_html/1_Read_estimate_accuracy.png' alt='Estimated accuracy' style='width: 800px; height: auto;'>
+<p style='font-size:14px;'>Note: If the scale of accuracy is not suitable, please use the giraffe_plot function to replot.</p>
+<p style='font-size:14px;'>giraffe_plot estimate_acc --input Estimated_information.txt --x_min 95 --x_max 100 --x_gap 1 </p>
+</div>
+<div class='figure-container' id='Read GC content'>
+<img src='Summary_html/2_Read_GC_content.png' alt='Read GC content' style='width: 800px; height: auto;'>
+</div>
+<div class='figure-container' id='Read length'>
+<img src='Summary_html/3_Read_length.png' alt='Read length' style='width: 800px; height: auto;'>
+</div>
+<h2 id='summary_Observe'>Observe</h2>
+<div class='figure-container' id='Observed accuracy'>
+<img src='Summary_html/1_Observed_read_accuracy.png' alt='Observed accuracy' style='width: 800px; height: auto;'>
+<p style='font-size:14px;'>Note: If the scale of accuracy is not suitable, please use the giraffe_plot function to replot.</p>
+<p style='font-size:14px;'>giraffe_plot observe_acc --input Observed_information.txt --x_min 95 --x_max 100 --x_gap 1 </p>
+</div>
+<div class='figure-container' id='Mismatch proportion'>
+<img src='Summary_html/2_Observed_mismatch_proportion.png' alt='Mismatch proportion' style='width: 800px; height: auto;'>
+<p style='font-size:14px;'>Note: If the scale of proportion is not suitable, please use the giraffe_plot function to replot.</p>
+<p style='font-size:14px;'>giraffe_plot observe_mismatch --input Observed_information.txt --y_max 5 --y_gap 1 </p>
+</div>
+<div class='figure-container' id='Homopolymer identification'>
+<img src='Summary_html/3_Homoploymer_summary.png' alt='Homopolymer identification' style='width: 800px; height: auto;'>
+<p style='font-size:14px;'>Note: If the scale of accuracy is not suitable, please use the giraffe_plot function to replot.</p>
+<p style='font-size:14px;'>giraffe_plot observe_homo --input Homoploymer_summary.txt --y_min 90 --y_max 100 --y_gap 2 </p>
+</div>
+<h2 id='summary_GC bias'>GC bias</h2>
+<div class='figure-container' id='Bin distribution'>
+<img src='Summary_html/1_Bin_distribution.png' alt='Bin distribution' style='width: 1000px; height: auto;'>
+</div>
+<div class='figure-container' id='Relationship (depth and GC conetent)'>
+<img src='Summary_html/2_Relationship_normalization.png' alt='Relationship (depth and GC conetent)' style='width: 1000px; height: auto;'>
+<p style='font-size:14px;'>Note: If the scale of GC content is not suitable, please use the renormalization_sequencing_bias for normalzation and giraffe_plot for plotting.</p>
+<p style='font-size:14px;'>renormalization_sequencing_bias -i S1_distribution.txt -l 30 -r 60 -o S1.txt </p>
+<p style='font-size:14px;'>giraffe_plot gcbias --input new_gcbias.txt --x_min 20 --x_max 50 --x_gap 2</pre>
+</div>
+</section>
+</main>
+</body>
+</html>
