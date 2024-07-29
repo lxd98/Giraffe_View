@@ -1,4 +1,4 @@
-# <img src="Results/giraffe_logo.png" width="100" style="display: block; margin-left: auto; margin-right: auto;">   Giraffe
+# <img src="Results/giraffe_logo.png" width="80" style="display: block; margin-left: auto; margin-right: auto;">   Giraffe
 <a href="https://pypi.org/project/Giraffe-View/" rel="pypi">![PyPI](https://img.shields.io/pypi/v/Giraffe-View?color=green)</a> <a href="https://opensource.org/license/mit/" rel="license">![License](https://img.shields.io/pypi/l/nanoCEM?color=orange)</a>
 
 **Giraffe** is specially designed to provide a comprehensive assessment of the accuracy of long-read sequencing datasets obtained from both the Pacific Biosciences (PacBio) and Oxford Nanopore Technologies (ONT) platforms, offering four distinct functions.
@@ -17,7 +17,7 @@
 
 # Installation
 
-## Installation by [CONDA](https://conda.io/projects/conda/en/latest/index.html)
+## Installation by [Conda](https://conda.io/projects/conda/en/latest/index.html)
 
 ```shell
 # install on the currently environment
