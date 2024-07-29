@@ -20,7 +20,7 @@
 ## Installation by [Conda](https://conda.io/projects/conda/en/latest/index.html)
 
 ```shell
-# install on the currently environment
+# install on the current environment
 conda install -c raymond_liu giraffe_view -y
 
 # install on a new environment
@@ -137,7 +137,7 @@ Here, we provide demo datasets for testing the **Giraffe**. The following comman
 giraffe_run_demo
 ```
 
-The demo datasets including three E. coli datasets including a 4.2 MB reference, 79 MB R10.4.1 reads, and 121 MB R9.4.1 reads. For the methylation files, two files of zebrafish blood (23 MB)and kidney (19 KB) are included. This demo takes about 7 minutes and  20 seconds with a maximum memory of 391 MB. This running includes the one-command pattern and four individual functions testing.
+The demo datasets included three E. coli datasets including a 4.2 MB reference, 79 MB R10.4.1 reads, and 121 MB R9.4.1 reads. For the methylation files, two files of zebrafish blood (23 MB)and kidney (19 KB) are included. This demo takes about 7 minutes and  20 seconds with a maximum memory of 391 MB. This running includes the one-command pattern and four individual functions testing.
 
 
 
@@ -147,7 +147,7 @@ The one-command pattern will generate a summary in [HTML](https://lxd98.github.i
 
 # Documentation
 
-For more details about the usage of Giraffe and results profiling, please refer to the [documentation](https://giraffe-documentation.readthedocs.io/en/latest).
+For more details about the usage of Giraffe and results profiling, please refer to the [document](https://giraffe-documentation.readthedocs.io/en/latest).
 
 
 
