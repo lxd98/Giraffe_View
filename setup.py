@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
   name="Giraffe_View",
-  version="0.1.0.14",
+  version="0.2.1",
   author="Xudong Liu",
   author_email="xudongliu98@gmail.com",
   description="Giraffe_View is specially designed to provide a comprehensive assessment of the accuracy of long-read sequencing datasets obtained from both the PacBio and Nanopore platforms.",
@@ -18,15 +18,14 @@ setuptools.setup(
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
   ],
-  python_requires = '>=3.8, <=3.11',
+  python_requires = '>=3',
   install_requires=[
   'pysam >= 0.17.0',
-  'plotnine >= 0.12.1',
   'numpy >= 1.7.0',
   'pandas >= 1.5.0',
-  'tqdm == 4.64.0',
+  'seaborn >= 0.13.2',
   'termcolor >= 2.0.0',
-  'Bio >= 1.6.2'
+  'biopython >= 1.6.2'
   ],
-  scripts = ["Giraffe_View/giraffe", "scripts/homopolymer_count", "scripts/replot_sequencing_bias", "scripts/renormalization_sequencing_bias"]
+  scripts = ["Giraffe_View/giraffe","Giraffe_View/giraffe_run_demo", "Giraffe_View/giraffe_plot", "scripts/homopolymer_count", "scripts/replot_sequencing_bias", "scripts/renormalization_sequencing_bias"]
 )

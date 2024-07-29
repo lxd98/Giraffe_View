@@ -24,7 +24,7 @@
 conda install -c raymond_liu giraffe_view -y
 
 # install on a new environment
-conda install -n giraffe -c raymond_liu giraffe_view -y
+conda create -n giraffe -c raymond_liu giraffe_view -y
 ```
 
 
