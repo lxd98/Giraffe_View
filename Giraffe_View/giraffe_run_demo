@@ -1,0 +1,26 @@
+#!/usr/bin/env python
+from os import system
+
+# get the table list
+system("wget https://figshare.com/ndownloader/files/44967445 -O read.txt")
+system("wget https://figshare.com/ndownloader/files/44967442 -O methyl.txt")
+system("wget https://figshare.com/ndownloader/files/44967499 -O aligned.txt")
+
+# get the reference and ONT reads (R10.4.1 and R9.4.1) of E.coli
+system("wget https://figshare.com/ndownloader/files/44967436 -O Read.tar.gz")
+
+# The 5mC methylation files of zebrafish blood and kidney samples.
+# The bed file is the gene promoter position in chromosome 1.
+system("wget https://figshare.com/ndownloader/files/44967427 -O Methylation.tar.gz")
+
+system("tar -xzvf Read.tar.gz")
+system("tar -xzvf Methylation.tar.gz")
+system("sed -i 's/,/\t/g' Methylation/zf_promoter.db")
+system("rm Read.tar.gz Methylation.tar.gz")
+
+system("giraffe --read read.txt --ref Read/ecoli_chrom.fa --cpu 2")
+system("giraffe estimate --read read.txt --plot --cpu 2")
+system("giraffe observe --read read.txt --ref Read/ecoli_chrom.fa --plot --cpu 2")
+system("giraffe observe --aligned aligned.txt --plot --cpu 2")
+system("giraffe gcbias --ref Read/ecoli_chrom.fa --aligned aligned.txt --plot --cpu 2")
+system("giraffe	modbin --methyl methyl.txt --region Methylation/zf_promoter.db --plot --cpu 2")

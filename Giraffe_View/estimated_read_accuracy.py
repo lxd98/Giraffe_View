@@ -2,6 +2,7 @@ from os import system
 import numpy as np
 import math
 import multiprocessing
+import gzip
 
 def GC_content(string):
     read = str(string).upper()
@@ -12,13 +13,6 @@ def GC_content(string):
     return[length, GC]
 
 def Qvalue_to_accuracy(string):
-    """
-    Calculate the estimated accuracy for a given string.
-    Parameters:
-    string (str): A string of bases in ASCII format.
-    Returns:
-    list: A list containing the estimated accuracy, error proportion, and Q-value.
-    """
     error_list = []
     for base_value in string:
         ascii_value = ord(base_value) - 33
@@ -28,13 +22,6 @@ def Qvalue_to_accuracy(string):
     return [1 - error_mean, error_mean, (-10) * math.log10(error_mean)]
 
 def process_chunk(chunk):
-    """
-    Process a chunk of reads.
-    Parameters:
-    chunk (list): A list of reads.
-    Returns:
-    list: A list containing the estimated accuracy, error proportion, and Q-value for each read in the chunk.
-    """
     results = []
     for line in chunk:
         read_id, sequence, quality = line
@@ -44,46 +31,42 @@ def process_chunk(chunk):
     return results
 
 def calculate_estimated_accuracy(input_type, input_file, num_processes, chunk_size=1000):
-    """
-    Calculate the estimated accuracy for each read in an input file and write the results to an output file.
-    Parameters:
-    input_file (str): The path to the input file.
-    output_file (str): The path to the output file.
-    num_processes (int): The number of processes to use for multiprocessing.
-    chunk_size (int): The size of the chunks to split the input file into.
-    """
     pool = multiprocessing.Pool(processes=num_processes)
     results = []
-    with open(input_file, "r") as input_file:
+    whether_compressed = ""
+
+
+    # judge whether input file is compressed (.gz) or not
+    if input_file.endswith('.gz'):
+    	open_func = gzip.open
+    	whether_compressed = "yes"
+
+    else:
+    	open_func = open
+    	whether_compressed = "no"
+
+    with open_func(input_file, "r") as input_file:
         count = 1
         chunk = []
         for line in input_file:
-            
-            # get the read ID
-            if count % 4 == 1:
-                line = line.replace("\n", "")
-                line = line.split(" ")
-                read_id = line[0]
-                count += 1
-            
-            # get the read sequence
-            elif count % 4 == 2:
-                sequence = line.replace("\n", "")
-                count += 1
+        	line = line.strip()
 
-            # get the quality string
-            elif count % 4 == 0:
-                line = line.replace("\n", "")
-                chunk.append((read_id, sequence, line))
-                count += 1
-            
-            else:
-                count += 1
+        	if whether_compressed == "yes":
+        		line = line.decode('ascii')
 
+        	if count % 4 == 1:
+        		read_id = line.split(" ")[0]
+        	elif count % 4 == 2:
+        		sequence = line
+        	elif count % 4 == 0:
+        		chunk.append((read_id, sequence, line))
 
-            if len(chunk) == chunk_size:
-                results.append(pool.apply_async(process_chunk, (chunk,)))
-                chunk = []
+        	count += 1
+
+        	if len(chunk) == chunk_size:
+        		results.append(pool.apply_async(process_chunk, (chunk,)))
+        		chunk = []
+        
         if len(chunk) > 0:
             results.append(pool.apply_async(process_chunk, (chunk,)))
     pool.close()
@@ -91,15 +74,71 @@ def calculate_estimated_accuracy(input_type, input_file, num_processes, chunk_si
     input_file.close()
 
     file = "Giraffe_Results/1_Estimated_quality/" + str(input_type) + ".tmp"
-    with open(file, "a") as output_file:
+    with open(file, "w") as output_file:
             for result in results:
                 for line in result.get():
-                    message = f"{line[0]}\t{line[1]}\t{line[2]}\t{line[3]}"
-                    message += f"\t{line[4]}\t{line[5]}\t{input_type}"
+                    message = f"{line[0]}\t{line[1]:.4f}\t{line[2]:.4f}\t{line[3]:.4f}"
+                    message += f"\t{line[4]}\t{line[5]:.4f}\t{input_type}"
                     output_file.write(message + "\n")
     output_file.close()
     output_file.close()
 
+def process_chunk_slow(queue, output_files, input_type):
+    while True:
+        chunk = queue.get()
+        if chunk is None:
+            break
+        output_file = output_files[chunk['process_id']]
+        with open(output_file, "a") as f:
+            for line in chunk['data']:
+                read_id, sequence, quality = line
+                GC = GC_content(sequence)
+                quality = Qvalue_to_accuracy(quality)
+                message = (f"{read_id}\t{quality[0]:.4f}\t{quality[1]:.4f}\t{quality[2]:.4f}\t"
+                           f"{GC[0]}\t{GC[1]:.4f}\t{input_type}")
+                f.write(message + "\n")
+
+def calculate_estimated_accuracy_slow(input_type, input_file, num_processes, chunk_size=1000):
+    output_dir = "Giraffe_Results/1_Estimated_quality/"
+    output_files = [f"{output_dir}{input_type}_{i}.tmp" for i in range(num_processes)]
+    queue = multiprocessing.Queue(maxsize=num_processes * 2)
+
+    if input_file.endswith('.gz'):
+        open_func = gzip.open
+    else:
+        open_func = open
+
+    workers = []
+    for process_id in range(num_processes):
+        worker = multiprocessing.Process(target=process_chunk_slow, args=(queue, output_files, input_type))
+        worker.start()
+        workers.append(worker)
+
+    with open_func(input_file, "rt") as input_file_handle:
+        chunk = []
+        chunk_counter = 0
+        for count, line in enumerate(input_file_handle, 1):
+            line = line.strip()
+            if count % 4 == 1:
+                read_id = line.split(" ")[0]
+            elif count % 4 == 2:
+                sequence = line
+            elif count % 4 == 0:
+                chunk.append((read_id, sequence, line))
+
+            if len(chunk) == chunk_size:
+                queue.put({'process_id': chunk_counter % num_processes, 'data': chunk})
+                chunk = []
+                chunk_counter += 1
+
+        if chunk:
+            queue.put({'process_id': chunk_counter % num_processes, 'data': chunk})
+
+    for _ in range(num_processes):
+        queue.put(None)
+
+    for worker in workers:
+        worker.join()
 
 def merge_results():
     with open("Giraffe_Results/1_Estimated_quality/header", "a") as ff:

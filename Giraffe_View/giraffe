@@ -1,7 +1,9 @@
 #!/usr/bin/env python
+import datetime
 import sys
 import argparse
 import pathlib
+from os import system
 from Giraffe_View.function import *
 from Giraffe_View.homopolymer import *
 from Giraffe_View.observed_read_accuracy import *
@@ -9,139 +11,579 @@ from Giraffe_View.gc_bias import *
 from Giraffe_View.estimated_read_accuracy import *
 from Giraffe_View.regional_modification import *
 from Giraffe_View.plot import *
+from Giraffe_View.summary_html import * 
 
 working_path = pathlib.Path().resolve()
 
 def estimated(args):
-	print_with_color("Start data processing!")
 	mkdir_d("1_Estimated_quality")
-	print_with_color("Start estimated read accuracy analysis!")
+	if args.read:
+		input_dataset = loading_dataset(args.read)
+		for data in input_dataset.keys():
+			now = datetime.datetime.now()			
+			print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] " + str(data) + ": Start estimated read accuracy analysis!")
+			# if args.less_memory:
+			calculate_estimated_accuracy_slow(data, input_dataset[data]["path"], args.cpu)
+			# else:
+			# 	calculate_estimated_accuracy(data, input_dataset[data]["path"], args.cpu)
 
-	input_dataset = loading_dataset(args.input)
-	for data in input_dataset.keys():
-		calculate_estimated_accuracy(data, input_dataset[data]["path"], args.cpu)
+	elif args.unaligned:
+		input_dataset = loading_dataset(args.unaligned)
+		for data in input_dataset.keys():
+			now = datetime.datetime.now()
+			print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] " + str(data) + ": Start estimated read accuracy analysis!")
+			bam2fastq(input_dataset[data]["path"], args.cpu)
+			
+			system("bash bam2fq.sh")
+			# if args.less_memory:
+			calculate_estimated_accuracy_slow(data, "giraffe_tmp.fastq", args.cpu)
+			# else:
+			# 	calculate_estimated_accuracy(data, "giraffe_tmp.fastq", args.cpu)
+			system("rm bam2fq.sh giraffe_tmp.fastq")
+
 	merge_results()
 
 	if args.plot:
-		print_with_color("Start plotting!")
+		now = datetime.datetime.now()
+		print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] Start plotting!")
 		plot_estimate()
-		print_with_color("Analysis finished!")
+
+		now = datetime.datetime.now()
+		print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] Analysis finished!")
 	else:
-		print_with_color("Analysis finished!")
+		now = datetime.datetime.now()
+		print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] Analysis finished!")
 	
-	mes = "The results are available at " + str(working_path) + "/results/1_Estimated_quality!"
-	print_with_color(str(mes))
+	mes = "The results are available at " + str(working_path) + "/Giraffe_Results/1_Estimated_quality!"
+	now = datetime.datetime.now()
+	print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] " + str(mes))
 
 def observed(args):
-	print_with_color("Start data processing!")
+	now = datetime.datetime.now()
+	print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] Start data processing!")
 	mkdir_d("2_Observed_quality")
-	input_dataset = loading_dataset(args.input)
-	for data in input_dataset.keys():
-		data_process(data, input_dataset[data]["type"], input_dataset[data]["path"], args.ref, args.cpu)
-		bamfile = "Giraffe_Results/2_Observed_quality/" + str(data) + ".bam"
 
-		print_with_color(str(data) + ": Start observed read accuracy analysis!")
-		observed_accuracy(bamfile, data)
+	if args.read:
+		if not args.ref:
+			error_with_color("Please input a reference!!!")
 
-		print_with_color(str(data) + ": Start observed homopolymer analysis!")
-		homopolymer_from_bam(bamfile, data)
+		input_dataset = loading_dataset(args.read)
+		for data in input_dataset.keys():
+			now = datetime.datetime.now()
+			print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] " + str(data) + ": Start read mapping!")
+			data_process(data, input_dataset[data]["type"], input_dataset[data]["path"], args.ref, args.cpu)
+			bamfile = "Giraffe_Results/2_Observed_quality/" + str(data) + ".bam"
+			
+			now = datetime.datetime.now()
+			print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] " + str(data) + ": Start observed read accuracy analysis!")
+			run_observed_accuracy(bamfile, data, args.cpu)
 
-		output = "Giraffe_Results/2_Observed_quality/" + str(data) + "_homopolymer_detail.txt"
-		homopolymer_summary_1(output, data)
-		homopolymer_summary_2(data)
+			temp_out = "Giraffe_Results/2_Observed_quality/giraffe_supplementary.temp.txt"
+			with open("merge_supplementary.sh", "w") as ff:
+			    mes = "cat Giraffe_Results/2_Observed_quality/*_supplementary_*.txt > " + str(temp_out)
+			    ff.write(mes + "\n")
+			ff.close()
 
+			system("bash merge_supplementary.sh")
+			supplementary_read_processing(data)
+                        
+			system("rm merge_supplementary.sh Giraffe_Results/2_Observed_quality/*_supplementary_*.txt")
+			system("rm Giraffe_Results/2_Observed_quality/giraffe_supplementary.temp.txt")
+
+			now = datetime.datetime.now()
+			print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] " + str(data) + ": Start homopolymer analysis!")
+			run_homopolymer_from_bam(bamfile, data, args.cpu)
+			
+			of = open("header", "w")
+			of.write("pos\tnum_of_mat\tdepth\ttype\tGroup\n")
+			of.close()
+
+			output ="Giraffe_Results/2_Observed_quality/" + str(data) + ".homopolymer_in_reference.txt"
+			ff = open("merge_homopolymer.sh", "w")
+			ff.write("cat header Giraffe_Results/2_Observed_quality/*_homopolymer_in_reference_*.txt > " + str(output))
+			ff.close()
+
+			system("bash merge_homopolymer.sh")
+			system("rm header")
+			system("rm merge_homopolymer.sh ")
+			system("rm Giraffe_Results/2_Observed_quality/*_homopolymer_in_reference_*.txt")
+			system("rm Giraffe_Results/2_Observed_quality/*_homopolymer_detail_*.txt ")
+
+			now = datetime.datetime.now()
+			print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] " + str(data) + ": Start summarize the homopolymer results!")
+			homopolymer_summary_2(data)
+
+	elif args.aligned:
+		input_dataset = loading_dataset(args.aligned)
+		for data in input_dataset.keys():
+			bamfile = input_dataset[data]["path"]
+
+			now = datetime.datetime.now()
+			print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] " + str(data) + ": Start observed read accuracy analysis!")
+			
+			if not os.path.exists(bamfile+".bai"):
+				system("samtools index -@ " + str(args.cpu) + " " + bamfile)
+
+			run_observed_accuracy(bamfile, data, args.cpu)
+
+			temp_out = "Giraffe_Results/2_Observed_quality/giraffe_supplementary.temp.txt"
+			with open("merge_supplementary.sh", "w") as ff:
+			    mes = "cat Giraffe_Results/2_Observed_quality/*_supplementary_*.txt > " + str(temp_out)
+			    ff.write(mes + "\n")
+			ff.close()
+
+			system("bash merge_supplementary.sh")
+			supplementary_read_processing(data)
+                        
+			system("rm merge_supplementary.sh Giraffe_Results/2_Observed_quality/*_supplementary_*.txt")
+			system("rm Giraffe_Results/2_Observed_quality/giraffe_supplementary.temp.txt")
+
+			now = datetime.datetime.now()
+			print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] " + str(data) + ": Start homopolymer analysis!")
+			run_homopolymer_from_bam(bamfile, data, args.cpu)
+			
+			of = open("header", "w")
+			of.write("pos\tnum_of_mat\tdepth\ttype\tGroup\n")
+			of.close()
+
+			output ="Giraffe_Results/2_Observed_quality/" + str(data) + ".homopolymer_in_reference.txt"
+			ff = open("merge_homopolymer.sh", "w")
+			ff.write("cat header Giraffe_Results/2_Observed_quality/*_homopolymer_in_reference_*.txt > " + str(output))
+			ff.close()
+
+			system("bash merge_homopolymer.sh")
+			system("rm header")
+			system("rm merge_homopolymer.sh ")
+			system("rm Giraffe_Results/2_Observed_quality/*_homopolymer_in_reference_*.txt")
+			system("rm Giraffe_Results/2_Observed_quality/*_homopolymer_detail_*.txt ")
+
+			now = datetime.datetime.now()
+			print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] " + str(data) + ": Start summarize the homopolymer results!")
+			homopolymer_summary_2(data)
+
+	elif args.unaligned:
+		if not args.ref:
+			error_with_color("Please input a reference!!!")
+		input_dataset = loading_dataset(args.unaligned)
+		for data in input_dataset.keys():
+			now = datetime.datetime.now()
+			print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] " + str(data) + ": Start read mapping!")
+			bam2fastq(input_dataset[data]["path"], args.cpu)
+			system("bash bam2fq.sh")
+			data_process(data, input_dataset[data]["type"], "giraffe_tmp.fastq", args.ref, args.cpu)
+			system("rm bam2fq.sh giraffe_tmp.fastq")
+			bamfile = "Giraffe_Results/2_Observed_quality/" + str(data) + ".bam"
+			
+			now = datetime.datetime.now()
+			print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] " + str(data) + ": Start observed read accuracy analysis!")
+			run_observed_accuracy(bamfile, data, args.cpu)
+
+			temp_out = "Giraffe_Results/2_Observed_quality/giraffe_supplementary.temp.txt"
+			with open("merge_supplementary.sh", "w") as ff:
+			    mes = "cat Giraffe_Results/2_Observed_quality/*_supplementary_*.txt > " + str(temp_out)
+			    ff.write(mes + "\n")
+			ff.close()
+
+			system("bash merge_supplementary.sh")
+			supplementary_read_processing(data)
+                        
+			system("rm merge_supplementary.sh Giraffe_Results/2_Observed_quality/*_supplementary_*.txt")
+			system("rm Giraffe_Results/2_Observed_quality/giraffe_supplementary.temp.txt")
+
+			now = datetime.datetime.now()
+			print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] " + str(data) + ": Start homopolymer analysis!")
+			run_homopolymer_from_bam(bamfile, data, args.cpu)
+			
+			of = open("header", "w")
+			of.write("pos\tnum_of_mat\tdepth\ttype\tGroup\n")
+			of.close()
+
+			output ="Giraffe_Results/2_Observed_quality/" + str(data) + ".homopolymer_in_reference.txt"
+			ff = open("merge_homopolymer.sh", "w")
+			ff.write("cat header Giraffe_Results/2_Observed_quality/*_homopolymer_in_reference_*.txt > " + str(output))
+			ff.close()
+
+			system("bash merge_homopolymer.sh")
+			system("rm header")
+			system("rm merge_homopolymer.sh ")
+			system("rm Giraffe_Results/2_Observed_quality/*_homopolymer_in_reference_*.txt")
+			system("rm Giraffe_Results/2_Observed_quality/*_homopolymer_detail_*.txt ")
+
+			now = datetime.datetime.now()
+			print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] " + str(data) + ": Start summarize the homopolymer results!")
+			homopolymer_summary_2(data)
+
+	now = datetime.datetime.now()
+	print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] " + str(data) + ": Start merge the observed quality results!")
 	merge_results_observed_acc()
 	merge_results_observed_homopolymer()
 
 	if args.plot:
-		print_with_color("Start plotting!")
+		now = datetime.datetime.now()
+		print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] Start plotting!")
 		plot_observe_acc()
 		plot_observe_homo()
 	else:
 		pass
 
-	mes = "The results are available at " + str(working_path) + "/results/observed_quality!"
-	print_with_color(str(mes))
+	mes = "The results are available at " + str(working_path) + "/Giraffe_Results/2_Observed_quality!"
+	now = datetime.datetime.now()
+	print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] " + str(mes))
 
 def GC_bias(args):
 	mkdir_d("3_GC_bias")
-	print_with_color("Start GC bias analysis!")
-	input_dataset = loading_dataset(args.input)
+	input_dataset = loading_dataset(args.aligned)
 	for data in input_dataset.keys():
-		compute_GC_bias(args.ref, input_dataset[data]["path"], args.binsize, data)
+		now = datetime.datetime.now()
+		print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] " + str(data) + ": Start GC bias analysis!")
+		compute_GC_bias(args.ref, input_dataset[data]["path"], args.binsize, data, args.cpu)
 		merge_GC_content_and_depth(args.binsize, data)
+	
 	merge_files()
 	get_bin_number_within_GC_content()
 
 	if args.plot:
-		print_with_color("Start plotting!")
-		plot_GC_bias()
-		print_with_color("Analysis finished!")
+		now = datetime.datetime.now()
+		print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] Start plotting!")
+		plot_GC_bias(input_binsize=str(args.binsize))
+		now = datetime.datetime.now()
+		print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] Analysis finished!")
 	else:
-		print_with_color("Analysis finished!")
+		now = datetime.datetime.now()
+		print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] Analysis finished!")
 	
-	mes = "The results are available at " + str(working_path) + "/results/GC_bias!"
-	print_with_color(str(mes))
+	mes = "The results are available at " + str(working_path) + "/Giraffe_Results/3_GC_bias!"
+	now = datetime.datetime.now()
+	print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] " + str(mes))
 
 def methylation(args):
+	now = datetime.datetime.now()
 	mkdir_d("4_Regional_modification")
-	print_with_color("Start calculating the modification bin analysis!")
+	print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] Analysis start!")
 
 
-	input_dataset = loading_dataset(args.input)
+	input_dataset = loading_dataset(args.methyl)
 	for data in input_dataset.keys():
-		methylation_calculation(input_dataset[data]["path"], args.pos, args.cpu, data)
+		now = datetime.datetime.now()
+		print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] " +f"{data}" + ": Calculating regional modification analysis!")
+		run_regional_methylation(input_dataset[data]["path"], args.region, data, args.cpu)
+
+	now = datetime.datetime.now()
+	print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] Summarize results!")
+	system("cat Giraffe_Results/4_Regional_modification/Temp_methy_* > Giraffe_Results/4_Regional_modification/Regional_methylation_proportion.txt")
+	system("rm Giraffe_Results/4_Regional_modification/Temp_methy_*")
 
 	if args.plot:
-		print_with_color("Start plotting!")
+		now = datetime.datetime.now()
+		print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] Start plotting!")
 		plot_modi_bin()
 		print_with_color("Analysis finished!")
 	else:
-		print_with_color("Analysis finished!")
+		now = datetime.datetime.now()
+		print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] Analysis finished!")
 
-	mes = "The results are available at " + str(working_path) + "/results/regional_modification!"
+	now = datetime.datetime.now()
+	mes = "[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] The results are available at " + str(working_path) + "/Giraffe_Results/4_Regional_modification!"
 	print_with_color(str(mes))
 
-if __name__ == '__main__':
-	parser = argparse.ArgumentParser(prog="giraffe", description="A tool to help you assess the quality of long-read sequencing data.")
+def total(args):
+	now = datetime.datetime.now()
+	print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] Analysis start!")
 
-	# Define subparsers
-	subparsers = parser.add_subparsers(dest='function', help="")
+	mkdir_d("1_Estimated_quality")
+	mkdir_d("2_Observed_quality")
+	mkdir_d("3_GC_bias")
+	mkdir_d("Summary_html")
+
+	if args.read:
+		input_dataset = loading_dataset(args.read)
+		data_table = args.read
+		for data in input_dataset.keys():
+			# estimate
+			now = datetime.datetime.now()			
+			print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] " + str(data) + ": Start estimated read accuracy analysis!")
+			
+			# if args.less_memory:
+			calculate_estimated_accuracy_slow(data, input_dataset[data]["path"], args.cpu)
+			# else:
+			# 	calculate_estimated_accuracy(data, input_dataset[data]["path"], args.cpu)
+
+			# observe
+			now = datetime.datetime.now()
+			print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] " + str(data) + ": Start read mapping!")
+			data_process(data, input_dataset[data]["type"], input_dataset[data]["path"], args.ref, args.cpu)
+			bamfile = "Giraffe_Results/2_Observed_quality/" + str(data) + ".bam"
+			
+			now = datetime.datetime.now()
+			print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] " + str(data) + ": Start observed read accuracy analysis!")
+			run_observed_accuracy(bamfile, data, args.cpu)
+
+			temp_out = "Giraffe_Results/2_Observed_quality/giraffe_supplementary.temp.txt"
+			with open("merge_supplementary.sh", "w") as ff:
+			    mes = "cat Giraffe_Results/2_Observed_quality/*_supplementary_*.txt > " + str(temp_out)
+			    ff.write(mes + "\n")
+			ff.close()
+
+			system("bash merge_supplementary.sh")
+			supplementary_read_processing(data)
+                        
+			system("rm merge_supplementary.sh Giraffe_Results/2_Observed_quality/*_supplementary_*.txt")
+			system("rm Giraffe_Results/2_Observed_quality/giraffe_supplementary.temp.txt")
+
+			now = datetime.datetime.now()
+			print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] " + str(data) + ": Start homopolymer analysis!")
+			run_homopolymer_from_bam(bamfile, data, args.cpu)
+			
+			of = open("header", "w")
+			of.write("pos\tnum_of_mat\tdepth\ttype\tGroup\n")
+			of.close()
+
+			output ="Giraffe_Results/2_Observed_quality/" + str(data) + ".homopolymer_in_reference.txt"
+			ff = open("merge_homopolymer.sh", "w")
+			ff.write("cat header Giraffe_Results/2_Observed_quality/*_homopolymer_in_reference_*.txt > " + str(output))
+			ff.close()
+
+			system("bash merge_homopolymer.sh")
+			system("rm header")
+			system("rm merge_homopolymer.sh ")
+			system("rm Giraffe_Results/2_Observed_quality/*_homopolymer_in_reference_*.txt")
+			system("rm Giraffe_Results/2_Observed_quality/*_homopolymer_detail_*.txt ")
+
+			now = datetime.datetime.now()
+			print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] " + str(data) + ": Start summarize the homopolymer results!")
+			homopolymer_summary_2(data)
+
+			# gc bias
+			now = datetime.datetime.now()
+			print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] " + str(data) + ": Start GC bias analysis!")
+			compute_GC_bias(args.ref, bamfile, args.binsize, data, args.cpu)
+			merge_GC_content_and_depth(args.binsize, data)
+
+	elif args.unaligned:
+		input_dataset = loading_dataset(args.unaligned)
+		data_table = args.unaligned
+		for data in input_dataset.keys():
+			
+			# estimate
+			now = datetime.datetime.now()
+			print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] " + str(data) + ": Start estimated read accuracy analysis!")
+			bam2fastq(input_dataset[data]["path"], args.cpu)
+			system("bash bam2fq.sh")
+			# if args.less_memory:
+			calculate_estimated_accuracy_slow(data, "giraffe_tmp.fastq", args.cpu)
+			# else:
+			# 	calculate_estimated_accuracy(data, "giraffe_tmp.fastq", args.cpu)
+
+			# observe
+			now = datetime.datetime.now()
+			print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] " + str(data) + ": Start read mapping!")
+			data_process(data, input_dataset[data]["type"], "giraffe_tmp.fastq", args.ref, args.cpu)
+			system("rm bam2fq.sh giraffe_tmp.fastq")
+			bamfile = "Giraffe_Results/2_Observed_quality/" + str(data) + ".bam"
+
+			now = datetime.datetime.now()
+			print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] " + str(data) + ": Start observed read accuracy analysis!")
+			run_observed_accuracy(bamfile, data, args.cpu)
+
+			temp_out = "Giraffe_Results/2_Observed_quality/giraffe_supplementary.temp.txt"
+			with open("merge_supplementary.sh", "w") as ff:
+			    mes = "cat Giraffe_Results/2_Observed_quality/*_supplementary_*.txt > " + str(temp_out)
+			    ff.write(mes + "\n")
+			ff.close()
+
+			system("bash merge_supplementary.sh")
+			supplementary_read_processing(data)
+                        
+			system("rm merge_supplementary.sh Giraffe_Results/2_Observed_quality/*_supplementary_*.txt")
+			system("rm Giraffe_Results/2_Observed_quality/giraffe_supplementary.temp.txt")
+
+			now = datetime.datetime.now()
+			print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] " + str(data) + ": Start homopolymer analysis!")
+			run_homopolymer_from_bam(bamfile, data, args.cpu)
+			
+			of = open("header", "w")
+			of.write("pos\tnum_of_mat\tdepth\ttype\tGroup\n")
+			of.close()
+
+			output ="Giraffe_Results/2_Observed_quality/" + str(data) + ".homopolymer_in_reference.txt"
+			ff = open("merge_homopolymer.sh", "w")
+			ff.write("cat header Giraffe_Results/2_Observed_quality/*_homopolymer_in_reference_*.txt > " + str(output))
+			ff.close()
+
+			system("bash merge_homopolymer.sh")
+			system("rm header")
+			system("rm merge_homopolymer.sh ")
+			system("rm Giraffe_Results/2_Observed_quality/*_homopolymer_in_reference_*.txt")
+			system("rm Giraffe_Results/2_Observed_quality/*_homopolymer_detail_*.txt ")
+
+			now = datetime.datetime.now()
+			print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] " + str(data) + ": Start summarize the homopolymer results!")
+			homopolymer_summary_2(data)
+
+			# gc bias
+			now = datetime.datetime.now()
+			print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] " + str(data) + ": Start GC bias analysis!")
+			compute_GC_bias(args.ref, bamfile, args.binsize, data, args.cpu)
+			merge_GC_content_and_depth(args.binsize, data)
+
+	# merge results
+	now = datetime.datetime.now()
+	print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] Start merge the results!")
+	# estimate
+	merge_results()
+	# observe
+	merge_results_observed_acc()
+	merge_results_observed_homopolymer()
+	# gc_bias
+	merge_files()
+	get_bin_number_within_GC_content()
+
+
+	# plot
+	now = datetime.datetime.now()
+	print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] Start plotting!")
+
+	plot_estimate()
+	plot_estimate("png","Giraffe_Results/Summary_html")
+	plot_observe_acc()
+	plot_observe_acc("png","Giraffe_Results/Summary_html")
+	plot_observe_homo()
+	plot_observe_homo("png","Giraffe_Results/Summary_html")
+	plot_GC_bias(input_binsize=str(args.binsize))
+	plot_GC_bias(input_binsize=str(args.binsize), format="png", path="Giraffe_Results/Summary_html")
 	
-	estimated_parser = subparsers.add_parser('estimate', help='Estimated accuracy, length, and GC content.')
-	estimated_parser.add_argument("--input", type=str, metavar="<file list>", required=True, help="input the file list")
-	estimated_parser.add_argument("--cpu", type=int, metavar="<number>", required=False, help="number of CPU (default:10)", default=10)
+	now = datetime.datetime.now()
+	print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] Start summarizing!")
+	summarize_giraffe_results(data_table)
+
+	now = datetime.datetime.now()
+	mes = "The results are available at " + str(working_path) + "/Giraffe_Results!"
+	print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] Analysis finished!")	
+	print_with_color("[" + now.strftime("%Y-%m-%d %H:%M:%S") + "] " + str(mes))
+
+if __name__ == '__main__':
+
+	version = "0.2.0"
+
+	parser = argparse.ArgumentParser(description="",
+		usage="\n   %(prog)s [subcommands] [options]							# Users can execute subcommands as needed to perform specific tasks."
+			  "\n   %(prog)s --read <read table> --ref <reference> --cpu <number of processes or threads>			# Running function of estimate, observe, and gcbias with FASTQ reads."
+			  "\n   %(prog)s --read <unaligned SAM/BAM table> --ref <reference> --cpu <number of processes or threads>	# Running function of estimate, observe, and gcbias with unaligned SAM/BAM reads."
+              "\n\nexample for table (sample_ID data_type file_path):\n"
+			  "  sample_A ONT /home/user/data/S1.fastq\n"
+			  "  sample_B ONT /home/user/data/S2.fastq\n"
+		      "  sample_C ONT /home/user/data/S3.fastq\n"
+		      "  ..."
+			  "\n\nnote:\n"
+			  "   version: " + str(version) + "\n"
+		      "   data_type: ONT, ONT_RNA, or Pacbio\n"
+		      "   For more deatails, please refer to the documentation: https://giraffe-documentation.readthedocs.io/en/latest.")
+	
+	parser.add_argument("--read", type=str, metavar="", required=False, help="table of FASTQ read files")
+	parser.add_argument("--unaligned", type=str, metavar="", required=False, help="table of the unaligned SAM/BAM files")
+	parser.add_argument("--ref", type=str, metavar="", required=False, help="reference file")
+	parser.add_argument("--cpu", type=int, metavar="", required=False, help="number of processes or threads (recommend to set this equal to the number of chromosomes, default:10)", default=10)
+	parser.add_argument("--binsize", type=int, metavar="", required=False, help="reference will be split into bins of the specified size (default:1000)", default=1000)
+	# parser.add_argument("--plot", required=False, help="results visualization", action='store_true')
+	# parser.add_argument("--less_memory", required=False, help="using less memory but takes more time to complete the estimated analysis.", action='store_true')
+
+
+
+	# Define subparsers	
+	subparsers = parser.add_subparsers(dest='function', help=None, description=None, prog="giraffe", metavar="  subcommand and function")
+	
+	estimated_parser = subparsers.add_parser('estimate', help='Estimated accuracy, length, and GC content.',
+		usage='\n  %(prog)s --read <read table> 				# For the FASTQ reads.\n'
+              '  %(prog)s --unaligned <unaligned SAM/BAM table> 	# For the unaligned SAM/BAM files.'
+              "\n\nexample for table (sample_ID data_type file_path):\n"
+			  "  sample_A ONT /home/user/data/S1.fastq\n"
+			  "  sample_B ONT /home/user/data/S2.fastq\n"
+		      "  sample_C ONT /home/user/data/S3.fastq\n"
+		      "  ..."
+		      "\n\nnote:\n"
+		      "   version: " + str(version) + "\n"
+		      "   data_type: ONT, ONT_RNA, or Pacbio\n"
+		      "   For more deatails, please refer to the documentation: https://giraffe-documentation.readthedocs.io/en/latest.")
+
+	estimated_parser.add_argument("--read", type=str, metavar="", required=False, help="table of FASTQ read files")
+	estimated_parser.add_argument("--unaligned", type=str, metavar="", required=False, help="table of the unaligned SAM/BAM files")
+	estimated_parser.add_argument("--cpu", type=int, metavar="", required=False, help="number of processes or threads (default:10)", default=10)
 	estimated_parser.add_argument("--plot", required=False, help="results visualization", action='store_true')
+	# estimated_parser.add_argument("--less_memory", required=False, help="using less memory but takes more time to complete the task", action='store_true')
 
-
-	observed_parser = subparsers.add_parser('observe', help='Observed accuracy, mismatch proportion, and homopolymer identification.')
-	observed_parser.add_argument("--input", type=str, metavar="<file list>", required=True, help="input the file list")
-	observed_parser.add_argument("--ref", type=str, metavar="<reference>", required=True, help="input reference")
-	observed_parser.add_argument("--cpu", type=int, metavar="<number>", required=False, help="number of CPU (default:10)", default=10)
+	observed_parser = subparsers.add_parser('observe', help='Observed accuracy, mismatch proportion, and homopolymer identification.',
+		usage="\n    %(prog)s --aligned <aligned SAM/BAM table> \t\t\t\t# For aligned SAM/BAM files. Please remove the secondary alignment (--secondary=no) and add MD tag (--MD) during mapping!\n"
+			  "    %(prog)s --read <read table> --ref <reference> \t\t\t# For FASTQ reads.\n"
+              "    %(prog)s --unaligned <unaligned SAM/BAM table> --ref <reference> \t# For unaligned SAM/BAM files."
+              "\n\nexample for table (sample_ID data_type file_path):\n"
+			  "  sample_A ONT /home/user/data/S1.fastq\n"
+			  "  sample_B ONT /home/user/data/S2.fastq\n"
+		      "  sample_C ONT /home/user/data/S3.fastq\n"
+              		      "\n\nnote:\n"
+		      "   version: " + str(version) + "\n"
+		      "   data_type: ONT, ONT_RNA, or Pacbio\n"
+		      "   For more deatails, please refer to the documentation: https://giraffe-documentation.readthedocs.io/en/latest.")
+              
+	observed_parser.add_argument("--read", type=str, metavar="", required=False, help="table of the FASTQ read files")
+	observed_parser.add_argument("--aligned", type=str, metavar="", required=False, help="table of the aligned SAM/BAM files")
+	observed_parser.add_argument("--unaligned", type=str, metavar="", required=False, help="table of the unaligned SAM/BAM files")
+	observed_parser.add_argument("--ref", type=str, metavar="", required=False, help="reference file")
+	observed_parser.add_argument("--cpu", type=int, metavar="", required=False, help="number of processes or threads (recommend to set this equal to the number of chromosomes, default:10)", default=10)
 	observed_parser.add_argument("--plot", required=False, help="results visualization", action='store_true')
 
-	GC_bias_parser = subparsers.add_parser('gcbias', help='Relationship between GC content and sequencing depth.')
-	GC_bias_parser.add_argument("--ref", type=str, metavar="<reference>", required=True, help="input reference file")
-	GC_bias_parser.add_argument("--input", type=str, metavar="<list>", required=True, help="input the list of bam/sam file")
-	GC_bias_parser.add_argument("--binsize", type=int, metavar="", required=False, help="input bin size (default:1000)", default=1000)
+	GC_bias_parser = subparsers.add_parser('gcbias', help='Relationship between GC content and sequencing depth.',
+		usage="\n   %(prog)s --ref <reference> --aligned <aligned SAM/BAM table> --binsize 5000 --cpu 24\n\n"
+		"example for table (sample_ID data_type file_path):\n"
+		"   sample_A ONT /home/user/data/S1.sort.bam\n"
+		"   sample_B ONT /home/user/data/S2.sort.bam\n"
+		"   sample_C ONT /home/user/data/S3.sort.bam\n"
+		"   ..."
+		"\n\nnote:\n"
+		"   version: " + str(version) + "\n"
+		"   data_type: ONT, ONT_RNA, or Pacbio\n"
+		"   For more deatails, please refer to the documentation: https://giraffe-documentation.readthedocs.io/en/latest.")
+	GC_bias_parser.add_argument("--ref", type=str, metavar="", required=True, help="reference file")
+	GC_bias_parser.add_argument("--aligned", type=str, metavar="", required=True, help="table of sorted SAM/BAM files")
+	GC_bias_parser.add_argument("--binsize", type=int, metavar="", required=False, help="reference will be split into bins of the specified size (default:1000)", default=1000)
 	GC_bias_parser.add_argument("--plot", required=False, help="results visualization", action='store_true')
+	GC_bias_parser.add_argument("--cpu", type=int, metavar="", required=False, help="number of processes or threads (recommend to set this equal to the number of chromosomes, default:10)", default=10)
 
-	methylation_parser = subparsers.add_parser('modbin', help='Average modification proportion at regional level.')
-	methylation_parser.add_argument("--input", type=str, metavar="<list>", required=True, help="input list of modificated file")
-	methylation_parser.add_argument("--pos", type=str, metavar="<reference>", required=True, help="input position file with CSV format")
-	methylation_parser.add_argument("--cpu", type=int, metavar="<number>", required=False, help="number of CPU (default:10)", default=10)
+	methylation_parser = subparsers.add_parser('modbin', help='Average modification proportion at regional level.',
+		usage="\n   %(prog)s --methyl <methylation table> --region <target region> \n\n"
+		"example for table (sample_ID data_type file_path):\n"
+		"   sample_A ONT /home/user/data/S1_5mC.txt\n"
+		"   sample_B ONT /home/user/data/S2_5mC.txt\n"
+		"   sample_C ONT /home/user/data/S3_5mC.txt\n"
+		"   ..."
+		"\n\nexample for methylation file (Chrom Start End Value):\n"
+		"   contig_A\t132\t133\t0.92\n"
+		"   contig_A\t255\t256\t0.27\n"
+		"   contig_A\t954\t955\t0.52\n"
+		"   ..."
+		"\n\nnote:\n"
+		"   version: " + str(version) + "\n"
+		"   data_type: ONT, ONT_RNA, or Pacbio\n"
+		"   For more deatails, please refer to the documentation: https://giraffe-documentation.readthedocs.io/en/latest.")
+
+
+	methylation_parser.add_argument("--methyl", type=str, metavar="", required=True, help="table of methylation files")
+	methylation_parser.add_argument("--region", type=str, metavar="", required=True, help="target region file (Chromosome\tStart\tEnd\tRegion_name)")
+	methylation_parser.add_argument("--cpu", type=int, metavar="", required=False, help="number of processes or threads (recommend to set this equal to the number of chromosomes, default:10)", default=10)
 	methylation_parser.add_argument("--plot", required=False, help="results visualization", action='store_true')
+	args = parser.parse_args()
 
 	# Add function to print help if no arguments are provided
 	if len(sys.argv) == 1:
 		parser.print_help(sys.stderr)
 		sys.exit(1)
 
-	args = parser.parse_args()
-
 	# Call the appropriate function based on the subparser used
 	if args.function == "observe":
-		observed(args)
+		if len(sys.argv) == 2:
+			observed_parser.print_help(sys.stderr)
+			sys.exit(1)
+		else:
+			observed(args)
 
 	elif args.function == "modbin":
 		methylation(args)
@@ -150,4 +592,11 @@ if __name__ == '__main__':
 		GC_bias(args)
 
 	elif args.function == "estimate":
-		estimated(args)
+		if len(sys.argv) == 2:
+			estimated_parser.print_help(sys.stderr)
+			sys.exit(1)
+		else:
+			estimated(args)
+	else:
+		total(args)
+		#create a summary in html

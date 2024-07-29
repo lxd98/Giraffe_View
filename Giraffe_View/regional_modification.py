@@ -1,53 +1,46 @@
 import pandas as pd
-import os
-from tqdm import tqdm
-from multiprocessing import Process, Queue, current_process
+import multiprocessing
 
-def bin_methylation(input_str, data):
-    """Calculate average methylation level for a target region."""
-    input_str = input_str.split(",")
-    target_id = input_str[3]
-    chrom_data = data[data["ref_ID"] == input_str[0]]
-    target_data = chrom_data[(int(input_str[1]) <= chrom_data["start"]) & (chrom_data["end"] <= int(input_str[2]))]
-    mean_methylation = target_data["modified_percentage"].mean()
-    return (target_id, mean_methylation)
+def run_regional_methylation(input_methyl, input_target, sample_ID, num_processes):
+    # Read methylation and target data from the input files
+    methyl = pd.read_csv(input_methyl, sep='\t', header=None, names=["CHROM", "START", "END", "VALUE"])
+    target = pd.read_csv(input_target, sep='\t', header=None, names=["CHROM", "START", "END", "ID"])
 
+    # Determine if VALUE is in range 0-1 or 0-100
+    max_value = methyl['VALUE'].max()
+    value_scale = 100 if max_value > 1 else 1
 
-def worker(inqueue, outqueue, data):
-    """Process input data and put output data into output queue."""
-    for frame in iter(inqueue.get, "STOP"):
-        outqueue.put(bin_methylation(frame, data))
-    outqueue.put(f"{current_process().name}: BYE!")
+    # Get the unique chromosomes from the target data
+    unique_chromosomes = set(target['CHROM'])
 
+    # Create a multiprocessing pool with the specified number of processes
+    with multiprocessing.Pool(processes=num_processes) as pool:
+        jobs = []
+        for chromosome in unique_chromosomes:
+            # Filter the methylation and target data for the current chromosome
+            sub_methyl = methyl[methyl["CHROM"] == chromosome][["START", "END", "VALUE"]]
+            sub_target = target[target["CHROM"] == chromosome][["START", "END", "ID"]]
+            # Create an asynchronous job for processing the data
+            jobs.append(pool.apply_async(regional_methylation_bed_worker, (sub_methyl, sub_target, str(sample_ID), chromosome, value_scale)))
 
-def manager(process_num, input_file, input_ref, sample_ID):
-    """Distribute work to worker processes and write output to file."""
-    data = pd.read_csv(input_file, header=None, names=["ref_ID", "start", "end", "modified_percentage"], sep="\t")
-    targets = pd.read_csv(input_ref, header=None, names=["chr", "start", "end", "target_id"])
-    total = len(targets)
-    inqueue = Queue()
-    outqueue = Queue()
+        # Wait for all jobs to complete
+        for job in jobs:
+            job.get()
 
-    for i in range(process_num):
-        Process(target=worker, args=(inqueue, outqueue, data)).start()
+def regional_methylation_bed_worker(input_methyl, input_target, sample_ID, chromosome, value_scale):
+    # Open the output file for writing
+    with open(f"Giraffe_Results/4_Regional_modification/Temp_methy_{sample_ID}_{chromosome}.txt", "w") as ff:
+        # Iterate over each row in the target data
+        for row in input_target.itertuples(index=True, name='Pandas'):
+            start = row.START
+            end = row.END
+            target_ID = row.ID
 
-    with open(input_ref) as ff:
-        for l in ff:
-            inqueue.put(l.strip())
+            # Filter the methylation data for the current region
+            target_data = input_methyl[(start <= input_methyl["START"]) & (input_methyl["END"] <= end)]
+            
+            # Calculate the mean methylation value and scale it
+            mean_methylation = target_data["VALUE"].mean() / value_scale
 
-    for i in range(process_num):
-        inqueue.put("STOP")
-
-    stop_count = 0
-    with tqdm(total=total, desc=input_file) as pbar, open(f"Giraffe_Results/4_Regional_modification/{str(sample_ID)}.bed", "w") as of:
-        while stop_count < process_num:
-            pbar.update()
-            result = outqueue.get()
-            if len(result) == 2:
-                of.write(f"{result[0]}\t{result[1]}\t{str(sample_ID)}\n")
-            elif result[-4:] == "BYE!":
-                stop_count += 1
-
-def methylation_calculation(input_file, input_ref, process_num, sample_ID):
-    """Calculate average methylation level for target regions in input_ref using methylation data in input_file."""
-    manager(process_num, input_file, input_ref, sample_ID)
+            # Write the result to the output file
+            ff.write(f"{target_ID}\t{mean_methylation:.4f}\t{sample_ID}\n")

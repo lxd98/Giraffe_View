@@ -2,61 +2,111 @@ import os
 from os import system
 import pandas as pd
 from Giraffe_View.function import cmd_shell
+import multiprocessing
 
-def compute_GC_bias(ref, bamfile, binsize, sample_ID):
-	def get_bin_bed():
-		with open("tmp.sh","w") as bash_file:
-			cmd1 = "samtools faidx " + str(ref)
-			cmd2 = "bedtools makewindows -g " + str(ref) + ".fai -w " + str(binsize) + " > Giraffe_Results/3_GC_bias/bin.bed"
-			bash_file.write(cmd1 + "\n")
-			bash_file.write(cmd2 + "\n")
-		bash_file.close()
-		run = "bash tmp.sh"
-		cmd_shell(str(run), "Bin size calculating")
+def classify_by_chromosome(input_file):
+    classified_lines = {}
 
-	def get_bin_GC_content():
-		with open("tmp_1.sh","w") as bash_file:
-			cmd = 'bedtools nuc -fi ' + str(ref) + ' -bed Giraffe_Results/3_GC_bias/bin.bed'
-			cmd += '> Giraffe_Results/3_GC_bias/bin.tmp'
-			bash_file.write(str(cmd))
-		bash_file.close()
-		run = "bash tmp_1.sh"
-		cmd_shell(str(run), "GC content calculating")
+    # Read the input file and classify the lines
+    with open(input_file, 'r') as file:
+        for line in file:
+            # Split the line by tab
+            fields = line.strip().split('\t')
+            first_field = fields[0]
 
-		output = open("Giraffe_Results/3_GC_bias/bin_GC_content.txt", "w")
-		with open("Giraffe_Results/3_GC_bias/bin.tmp") as ff:
-			for bins in ff:
-				if bins[0] != "#":
-					bins = bins.replace("\n", "")
-					bins = bins.split("\t")
-					output.write(bins[0] + "\t" + bins[1] + "\t" + bins[2] + "\t" + bins[4] + "\n")
-		ff.close()
-		output.close()
+            # Add the line to the appropriate list in the dictionary
+            if first_field not in classified_lines:
+                classified_lines[first_field] = []
+            classified_lines[first_field].append(line)
 
-	def get_bin_depth():
-		ff = open("tmp_2.sh", "w")
-		mes = "samtools bedcov Giraffe_Results/3_GC_bias/bin.bed " + str(bamfile)
-		mes += " > Giraffe_Results/3_GC_bias/" + str(sample_ID) + "_bin_depth.txt"
-		ff.write(mes)
-		ff.close()
-		run = "bash tmp_2.sh"
-		cmd_shell(str(run), "Depth calculating")
+    # Write the classified lines to separate output files
+    for key, lines in classified_lines.items():
+        output_file = f"Giraffe_Results/3_GC_bias/{key}_gcbias_bin.bed"
+        with open(output_file, 'w') as file:
+            file.writelines(lines)
 
-	if os.path.exists("Giraffe_Results/3_GC_bias/bin.bed") and os.path.exists("Giraffe_Results/3_GC_bias/bin_GC_content.txt"):
-		get_bin_depth()
+def get_bin_bed(input_reference, input_binsize):
+	if not os.path.exists(f"{input_reference}.fai"):
+		system(f"samtools faidx {input_reference}")
+	system(f"bedtools makewindows -g {input_reference}.fai -w {input_binsize} > Giraffe_Results/3_GC_bias/bin.bed")
+	classify_by_chromosome("Giraffe_Results/3_GC_bias/bin.bed")
+
+def get_bin_GC(args):
+	input_reference, input_chromosome, path = args
+	system(f"bedtools nuc -fi {input_reference} -bed {path}/{input_chromosome}_gcbias_bin.bed > {path}/{input_chromosome}_bin_GC.tmp")
+
+	input_file = f"{path}/{input_chromosome}_bin_GC.tmp"
+	output = f"{path}/{input_chromosome}_bin_GC.txt"
+	with open(input_file, "r") as ff:
+		with open(output, "w") as of:
+			for bin in ff:
+				if bin[0] != "#":
+					bin = bin.replace("\n", "")
+					bin = bin.split()
+					bin_chrom = bin[0]
+					bin_start = bin[1]
+					bin_end = bin[2]
+					bin_gc = bin[4]
+					mes = str(bin_chrom) + "\t" + str(bin_start) + "\t"
+					mes += str(bin_end) + "\t" + str(bin_gc) + "\n"
+					of.write(mes)
+	system(f"rm {path}/{input_chromosome}_bin_GC.tmp")
+
+def manager_GC_content(input_reference, num_cpus):
+	processes = []
+	chromosomes = []
+
+	with open(f"{input_reference}.fai", "r") as ff:
+		for l in ff.readlines():
+			l = l.replace("\n","").split()
+			chromosomes.append(l[0])
+	ff.close()
+
+	args = [(input_reference, chrom, "Giraffe_Results/3_GC_bias") for chrom in chromosomes]
+	with multiprocessing.Pool(processes=num_cpus) as pool:
+		pool.map(get_bin_GC, args)
+
+	path = "Giraffe_Results/3_GC_bias"
+	system(f"cat {path}/*_bin_GC.txt > {path}/bin_GC.txt")
+	system(f"rm {path}/*_bin_GC.txt")
+
+def get_bin_depth(args):
+	input_sample_ID, input_bam, input_chromosome, path = args
+	system(f"samtools bedcov {path}/{input_chromosome}_gcbias_bin.bed {input_bam} > {path}/{input_sample_ID}_{input_chromosome}_bin_depth.txt")
+
+def manager_bin_depth(input_reference,sample_ID, bamfile, num_cpus):
+	processes = []
+	chromosomes = []
+
+	with open(f"{input_reference}.fai", "r") as ff:
+		for l in ff.readlines():
+			l = l.replace("\n","").split()
+			chromosomes.append(l[0])
+	ff.close()
+
+	args = [(sample_ID, bamfile, chrom, "Giraffe_Results/3_GC_bias") for chrom in chromosomes]
+	with multiprocessing.Pool(processes=num_cpus) as pool:
+		pool.map(get_bin_depth, args)
+
+	path = "Giraffe_Results/3_GC_bias"
+	system(f"cat {path}/*_bin_depth.txt > {path}/{sample_ID}.bin_depth.txt")
+	system(f"rm {path}/*_bin_depth.txt")
+
+def compute_GC_bias(ref, bamfile, binsize, sample_ID, num_cpu):
+	path="Giraffe_Results/3_GC_bias"
+	if os.path.exists(f"{path}/bin.bed") and os.path.exists(f"{path}/bin_GC.txt"):
+		manager_bin_depth(ref, sample_ID, bamfile, num_cpu)
 	else:
-		get_bin_bed()
-		get_bin_GC_content()
-		get_bin_depth()
-		system("rm ./Giraffe_Results/3_GC_bias/bin.tmp")
+		get_bin_bed(ref, binsize)
+		manager_GC_content(ref, num_cpu)
+		manager_bin_depth(ref, sample_ID, bamfile, num_cpu)
 
-
-	system("rm tmp*sh")
-	system("rm Giraffe_Results/3_GC_bias/bin.bed")
+	system(f"rm {path}/bin.bed")
+	system(f"rm {path}/*_bin.bed")
 
 def merge_GC_content_and_depth(binsize, sample_ID):
 	data = {}
-	input_depth = "Giraffe_Results/3_GC_bias/" + str(sample_ID) + "_bin_depth.txt"
+	input_depth = "Giraffe_Results/3_GC_bias/" + str(sample_ID) + ".bin_depth.txt"
 	with open(input_depth) as f1:
 		for bins in f1:
 			bins = bins.replace("\n", "")
@@ -67,7 +117,7 @@ def merge_GC_content_and_depth(binsize, sample_ID):
 				data[KEY]["dp"] = int(bins[3]) /  int(binsize)
 	f1.close()
 
-	with open("Giraffe_Results/3_GC_bias/bin_GC_content.txt") as f2:
+	with open("Giraffe_Results/3_GC_bias/bin_GC.txt") as f2:
 		for bins in f2:
 			bins = bins.replace("\n", "")
 			bins = bins.split("\t")		
@@ -100,11 +150,12 @@ def merge_GC_content_and_depth(binsize, sample_ID):
 		ff.write(str(i) + "\t" + str(ave_dp) + "\t" + str(len(tmp)) + "\t" + str(sample_ID) + "\n")
 	ff.close()
 
-	# get the 90% data for downstream normalization
-	df = pd.read_csv(output_file, delim_whitespace=True)
+	# get the 95% data for downstream normalization
+	df = pd.read_csv(output_file, sep=r'\s+')
+	# df = pd.read_csv(output_file, delim_whitespace=True)
 	max_number = df["Number"].max()
 	total_number = df["Number"].sum()
-	porportion = 0.90
+	porportion = 0.95
 	tmp = df[df["Number"] == max_number].copy()
 	
 	if len(tmp) == 1:
@@ -139,7 +190,7 @@ def merge_files():
 	system("rm header Giraffe_Results/3_GC_bias/*_relationship_tmp.txt")
 
 def get_bin_number_within_GC_content():
-	df = pd.read_table("Giraffe_Results/3_GC_bias/bin_GC_content.txt", header=None)
+	df = pd.read_table("Giraffe_Results/3_GC_bias/bin_GC.txt", header=None)
 	with open("Giraffe_Results/3_GC_bias/Bin_distribution.txt", "w") as ff:
 		ff.write("GC_content\tNumber\n")
 		df[3] = df[3] * 100
@@ -147,4 +198,4 @@ def get_bin_number_within_GC_content():
 			tmp = df[(i-0.5 <= df[3]) & (df[3] < i+0.5)].copy()
 			ff.write(str(i) + "\t" + str(len(tmp)) + "\n")
 	ff.close()
-	system("rm Giraffe_Results/3_GC_bias/bin_GC_content.txt")
+	system("rm Giraffe_Results/3_GC_bias/bin_GC.txt")

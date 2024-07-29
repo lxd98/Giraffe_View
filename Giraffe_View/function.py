@@ -3,6 +3,7 @@ import re
 import os
 from termcolor import colored
 from subprocess import Popen, PIPE
+import pandas as pd
 
 def print_with_color(input_string):
     print(colored(input_string, "green"))
@@ -15,7 +16,7 @@ def loading_dataset(input_file):
     with open(input_file) as ff:
         for l in ff:
             l = l.replace("\n", "")
-            l = l.split(" ")
+            l = l.split()
 
             # check the file
             if os.path.exists(l[2]):
@@ -50,6 +51,12 @@ def count_indel_and_snv(str):
     for i in str:
         dict[i] = dict.get(i, 0) + 1
     return dict
+
+
+def bam2fastq(input_bam, CPU):
+    with open("bam2fq.sh", "w") as ff:
+        ff.write("samtools fastq " + str(input_bam) + " -@ " + str(CPU) + " > giraffe_tmp.fastq")
+    ff.close()
 
 #remove the insertion (I) in the tail of string
 def remove_I(string):
@@ -103,3 +110,10 @@ def get_base_alignment(input_list):
             else:
                 result =  "S" # S = substitution
     return result
+
+def process_in_chunks(file_path, chunk_size=10000):
+    chunks = pd.read_csv(file_path, chunksize=chunk_size, sep="\t")
+    results = []
+    for chunk in chunks:
+        results.append(chunk)
+    return pd.concat(results)

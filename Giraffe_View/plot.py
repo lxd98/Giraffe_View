@@ -1,294 +1,369 @@
-from os import system
-from plotnine import * 
 import pandas as pd
-import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
 import warnings
+import os
+from Giraffe_View.function import process_in_chunks
 
 warnings.filterwarnings('ignore')
 
-def plot_estimate():
-	df=pd.read_csv("Giraffe_Results/1_Estimated_quality/Estimated_information.txt", sep="\t")
-	df=pd.DataFrame(df)
+def plot_estimate(format='svg', path='Giraffe_Results/1_Estimated_quality'):
+	df = process_in_chunks("Giraffe_Results/1_Estimated_quality/Estimated_information.txt")
+	df = pd.DataFrame(df)
 	df["Accuracy"] = df["Accuracy"] * 100
 	df["GC_content"] = df["GC_content"] * 100
 	df["Length"] = df["Length"] / 1000
 
 	min_1 = df["Accuracy"].min()
-	if min_1 >= 75:
-		acc_scale = [75,100]
-		acc_breaks = [i for i in range(75, 101, 5)]
+	if min_1 >= 95:
+		acc_scale = [95, 100]
+		acc_breaks = [i for i in range(95, 101, 0.5)]
+	elif min_1 >= 90:
+		acc_scale = [90, 100]
+		acc_breaks = [i for i in range(90, 101, 1)]
+	elif min_1 >= 80:
+		acc_scale = [80, 100]
+		acc_breaks = [i for i in range(80, 101, 2)]
+	elif min_1 >= 70:
+		acc_scale = [70, 100]
+		acc_breaks = [i for i in range(70, 101, 5)]
+	elif min_1 >= 60:
+		acc_scale = [60, 100]
+		acc_breaks = [i for i in range(60, 101, 5)]
 	elif min_1 >= 50:
-		acc_scale = [50,100]
-		acc_breaks = [i for i in range(50, 101, 10)]
+		acc_scale = [50, 100]
+		acc_breaks = [i for i in range(50, 101, 5)]
+	elif min_1 >= 40:
+		acc_scale = [40, 100]
+		acc_breaks = [i for i in range(40, 101, 10)]
+	elif min_1 >= 30:
+		acc_scale = [30, 100]
+		acc_breaks = [i for i in range(30, 101, 10)]
 	elif min_1 >= 20:
-		acc_scale = [20,100]
+		acc_scale = [20, 100]
 		acc_breaks = [i for i in range(20, 101, 10)]
+	elif min_1 >= 10:
+		acc_scale = [10, 100]
+		acc_breaks = [i for i in range(10, 101, 10)]
 	else:
-		acc_scale = [0,100]
-		acc_breaks = [i for i in range(0, 101, 10)]
+		acc_scale = [0, 100]
+		acc_breaks = [i for i in range(0, 101, 5)]
 
-	Acc = (
-		ggplot(df, aes(x="Accuracy", fill="Group")) + 
-			geom_density(adjust=1, size=0.5, alpha=0.5) +
-            scale_x_continuous(name="Estimated read accuracy (%)",
-            	limits=acc_scale, breaks=acc_breaks) + 
-            scale_y_continuous(name="Probability Density Function (PDF)") + 
-            theme_classic() + xlab("") +
-            theme(axis_text=element_text(size=12, color="black"),
-                  axis_title=element_text(size=12, color="black"),
-                  legend_text = element_text(size=12, color="black"),
-                  legend_title = element_blank(),
-                  legend_position = "right")
-            )
+	# plot
+	plt.figure(figsize=(8, 6))
+	ax = sns.kdeplot(data=df, x="Accuracy", hue="Group", fill=True, 
+		alpha=0.6, palette = "Set2", common_norm=False)
+	sns.move_legend(ax, "upper left")	
+	ax
+	plt.xlabel("Estimated read accuracy (%)")
+	plt.ylabel("Probability Density Function")
+	plt.xlim(acc_scale)
+	plt.xticks(acc_breaks)
 
-	GC_content=(
-		ggplot(df, aes(x="Group", y="GC_content", fill="Group")) + 
-			geom_boxplot(alpha=0.5, width=0.2, outlier_shape='') + 
-			 # outlier_size=0.35) +
-            scale_y_continuous(name="GC content (%)", 
-            	limits=(0,101), breaks=[i for i in range(0,101,10)]) + 
-            theme_classic() +
-            theme(axis_text_x=element_text(size=12, color="black", angle=45),
-            	axis_text_y=element_text(size=12, color="black"),
-                	axis_title_x=element_blank(),
- 			axis_title_y=element_text(size=12, color="black"),
-                	legend_position = 'none')
-            )
+	plt.tight_layout()
+	plt.savefig(f"{path}/1_Read_estimate_accuracy.{format}", format=format, dpi=300)
+	plt.close()
+
+	plt.figure(figsize=(8, 4))
+	sns.boxplot(data=df, y="Group", x="GC_content", hue="Group", 
+		palette="Set2", dodge=False, showfliers=False)
 	
-	ave = df["Length"].mean()
+	plt.xlabel("GC content (%)")
+	plt.xlim(0, 101)
+	plt.xticks(range(0, 101, 10))
+	
+	plt.yticks()	
+	plt.legend([],[], frameon=False)  # Hide the legend
+	plt.tight_layout()
+	plt.savefig(f"{path}/2_Read_GC_content.{format}", format=format, dpi=300)
+	plt.close()
 
+	ave = df["Length"].mean()
 	if ave <= 1:
-		len_scale = [0,5]
-		len_breaks = [i for i in range(0, 11, 0.5)]
+		len_scale = [0, 5]
+		len_breaks = [i for i in range(0, 6, 0.5)]
 	elif ave <= 5:
-		len_scale = [0,10]
+		len_scale = [0, 10]
 		len_breaks = [i for i in range(0, 11, 1)]
 	elif ave <= 10:
-		len_scale = [0,20]
+		len_scale = [0, 20]
 		len_breaks = [i for i in range(0, 21, 2)]
 	elif ave <= 20:
-		len_scale = [0,30]
+		len_scale = [0, 30]
 		len_breaks = [i for i in range(0, 31, 5)]
 	elif ave <= 30:
-		len_scale = [0,50]
+		len_scale = [0, 50]
 		len_breaks = [i for i in range(0, 51, 5)]
 	else:
-		len_scale = [0,100]
+		len_scale = [0, 100]
 		len_breaks = [i for i in range(0, 101, 10)]
 
-	Length = (
-		ggplot(df, aes(x="Length", fill="Group")) + 
-			geom_density(adjust=1, size=0.5, alpha=0.5) +
-            scale_x_continuous(name="Read length (Kb)", 
-            	limits=len_scale, breaks=len_breaks) + 
-            scale_y_continuous(name="Probability Density Function (PDF)") + 
-            theme_classic() + xlab("") +
-            theme(axis_text=element_text(size=12, color="black"),
-                  axis_title=element_text(size=12, color="black"),
-                  legend_text = element_text(size=12, color="black"),
-                  legend_title = element_blank(),
-                  legend_position = "right")
-            )
+	plt.figure(figsize=(8, 6))
+	sns.kdeplot(data=df, x="Length", hue="Group", 
+		fill=True, common_norm=False, alpha=0.6,
+		palette="Set2")
 
-	Acc.save(filename = "1_Read_accuracy.pdf", 
-		width=8, height=6, dpi=300, path="Giraffe_Results/1_Estimated_quality")
-	Length.save(filename = "2_Read_length.pdf", 
-		width=8, height=6, dpi=300, path="Giraffe_Results/1_Estimated_quality")
-	GC_content.save(filename = "3_Read_GC_content.pdf", 
-		width=4, height=6, dpi=300, path="Giraffe_Results/1_Estimated_quality")
+	plt.xlabel("Read length (Kb)")
+	plt.ylabel("Probability Density Function")
+	plt.xlim(len_scale)
+	plt.xticks(len_breaks)
+	plt.tight_layout()
+	plt.savefig(f"{path}/3_Read_length.{format}", format=format, dpi=300)
+	plt.close()
 
-def plot_observe_acc():
-	df=pd.read_csv("Giraffe_Results/2_Observed_quality/Observed_information.txt", sep="\t")
-	df=pd.DataFrame(df)
+def plot_observe_acc(format='svg', path='Giraffe_Results/2_Observed_quality'):
+	# color_set = "Set2"
+	df = process_in_chunks("Giraffe_Results/2_Observed_quality/Observed_information.txt")
+	df = pd.DataFrame(df)
 
 	df["Acc"] = df["Acc"] * 100
 	min_1 = df["Acc"].min()
-	if min_1 >= 75:
-		acc_scale = [75,100]
-		acc_breaks = [i for i in range(75, 101, 5)]
+
+	min_1 = df["Acc"].min()
+
+	if min_1 >= 95:
+		acc_scale = [95, 100]
+		acc_breaks = [i for i in range(95, 101, 0.5)]
+	elif min_1 >= 90:
+		acc_scale = [90, 100]
+		acc_breaks = [i for i in range(90, 101, 1)]
+	elif min_1 >= 80:
+		acc_scale = [80, 100]
+		acc_breaks = [i for i in range(80, 101, 2)]
+	elif min_1 >= 70:
+		acc_scale = [70, 100]
+		acc_breaks = [i for i in range(70, 101, 5)]
+	elif min_1 >= 60:
+		acc_scale = [60, 100]
+		acc_breaks = [i for i in range(60, 101, 5)]
 	elif min_1 >= 50:
-		acc_scale = [50,100]
-		acc_breaks = [i for i in range(50, 101, 10)]
+		acc_scale = [50, 100]
+		acc_breaks = [i for i in range(50, 101, 5)]
+	elif min_1 >= 40:
+		acc_scale = [40, 100]
+		acc_breaks = [i for i in range(40, 101, 10)]
+	elif min_1 >= 30:
+		acc_scale = [30, 100]
+		acc_breaks = [i for i in range(30, 101, 10)]
 	elif min_1 >= 20:
-		acc_scale = [20,100]
+		acc_scale = [20, 100]
 		acc_breaks = [i for i in range(20, 101, 10)]
+	elif min_1 >= 10:
+		acc_scale = [10, 100]
+		acc_breaks = [i for i in range(10, 101, 10)]
 	else:
-		acc_scale = [0,100]
-		acc_breaks = [i for i in range(0, 101, 10)]
+		acc_scale = [0, 100]
+		acc_breaks = [i for i in range(0, 101, 5)]
 
-	Acc = (
-		ggplot(df, aes(x="Acc", fill="Group")) + 
-			geom_density(adjust=1, size=0.5, alpha=0.5) +
-	    	scale_x_continuous(name="Observed read accuracy (%)", 
-	    		limits=acc_scale, breaks=acc_breaks) +
-	    	scale_y_continuous(name="Probability Density Function (PDF)") +
-	    	theme_classic() + 
-            theme(axis_text=element_text(size=12, color="black"),
-                  axis_title=element_text(size=12, color="black"),
-                  legend_text = element_text(size=12, color="black"),
-                  legend_title = element_blank(),
-                  legend_position = "right")
-            )
+	# Plot density plot for observed read accuracy
+	# sns.set(style='darkgrid')
+	plt.figure(figsize=(8, 6))
 
-	Acc.save(filename = "1_Observed_read_accuracy.pdf", 
-		width=8, height=6, dpi=300, path="Giraffe_Results/2_Observed_quality/")
-
-	df["p_ins"] = 100 * df["Ins"]/(df["Ins"] + df["Del"] + df["Sub"] + df["Mat"])
-	df["p_del"] = 100 * df["Del"]/(df["Ins"] + df["Del"] + df["Sub"] + df["Mat"])
-	df["p_sub"] = 100 * df["Sub"]/(df["Ins"] + df["Del"] + df["Sub"] + df["Mat"])
+	ax = sns.kdeplot(data=df, x="Acc", hue="Group", fill=True, 
+		common_norm=False, alpha=0.6, palette = "Set2")
+	sns.move_legend(ax, "upper left")	
+	ax
 	
+	plt.xlabel("Observed read accuracy (%)")
+	plt.ylabel("Probability Density Function")
+	plt.xlim(acc_scale)
+	plt.xticks(acc_breaks)
+
+	plt.tight_layout()
+	plt.savefig(f"{path}/1_Observed_read_accuracy.{format}", format=format, dpi=300)
+	plt.close()
+
+	# Compute mismatch proportions
+	df["p_ins"] = 100 * df["Ins"] / (df["Ins"] + df["Del"] + df["Sub"] + df["Mat"])
+	df["p_del"] = 100 * df["Del"] / (df["Ins"] + df["Del"] + df["Sub"] + df["Mat"])
+	df["p_sub"] = 100 * df["Sub"] / (df["Ins"] + df["Del"] + df["Sub"] + df["Mat"])
+
+	# Melt the dataframe for mismatch proportions
 	df1 = pd.melt(df, id_vars=['Group'], value_vars=['p_ins', 'p_del', 'p_sub'])
 	max_1 = df["p_ins"].max()
 	max_2 = df["p_del"].max()
 	max_3 = df["p_sub"].max()
 	max_4 = max(max_1, max_2, max_3)
 
-	if max_4 <= 20:
-		mis_breaks = [i for i in range(0, 101, 1)]
+	if max_4 <= 5:
+		mis_scale = [0, 5]
+		mis_breaks = [i for i in range(0, 6, 0.5)]
+	elif max_4 <= 10:
+		mis_scale = [0, 10]
+		mis_breaks = [i for i in range(0, 11, 1)]
+	elif max_4 <= 20:
+		mis_scale = [0, 20]
+		mis_breaks = [i for i in range(0, 21, 2)]
+	elif max_4 <= 30:
+		mis_scale = [0, 30]
+		mis_breaks = [i for i in range(0, 31, 5)]
+	elif max_4 <= 40:
+		mis_scale = [0, 40]
+		mis_breaks = [i for i in range(0, 41, 5)]
 	elif max_4 <= 50:
-		mis_breaks = [i for i in range(0, 101, 2)]
+		mis_scale = [0, 50]
+		mis_breaks = [i for i in range(0, 51, 5)]
+	elif max_4 <= 60:
+		mis_scale = [0, 60]
+		mis_breaks = [i for i in range(0, 61, 10)]
+	elif max_4 <= 70:
+		mis_scale = [0, 70]
+		mis_breaks = [i for i in range(0, 71, 10)]
+	elif max_4 <= 80:
+		mis_scale = [0, 80]
+		mis_breaks = [i for i in range(0, 81, 10)]
+	elif max_4 <= 90:
+		mis_scale = [0, 90]
+		mis_breaks = [i for i in range(0, 91, 10)]
 	else:
-		mis_breaks = [i for i in range(0, 101, 5)]		
+		mis_scale = [0, 100]
+		mis_breaks = [i for i in range(0, 101, 10)]
 
-	Mis = (
-		ggplot(df1, aes(x="variable", y="value", fill="Group")) + 
-			geom_boxplot(alpha=0.5, width=0.2, outlier_shape='') +
-				# outlier_size=0.35) +
-			theme_classic() +
-	    	scale_y_continuous(name="Mismatch proportion (%)",breaks=mis_breaks) +
-	    	scale_x_discrete(name="Mismatch type", 
-	    		labels=["Deletion", "Insertion", "Substitution"]) +
-	    	theme(axis_text=element_text(size=12, color="black"),
-	        	axis_title_y=element_text(size=12, color="black"),
-	        	axis_title_x=element_blank(),
-	        	legend_text = element_text(size=12, color="black"),
-	        	legend_title = element_blank(),
-	        	legend_position = "right")
-		)
+	# Plot boxplot for mismatch proportions
+	plt.figure(figsize=(8, 6))
+	sns.boxplot(data=df1, x="variable", y="value", hue="Group", 
+		showfliers=False, width=0.5, gap=0.1, saturation=0.6, 
+		palette = "Set2", linecolor="black")
 
-	Mis.save(filename = "2_Observed_mismatch_proportion.pdf",
-		width=8, height=6, dpi=300, path="Giraffe_Results/2_Observed_quality/")
+	plt.ylabel("Mismatch proportion (%)")
+	plt.ylim(mis_scale)
+	plt.yticks(mis_breaks)
+	plt.xticks(ticks=[0, 1, 2], labels=["Deletion", "Insertion", "Substitution"])
+	plt.xlabel("")
 
-def plot_observe_homo():
-	df=pd.read_csv("./Giraffe_Results/2_Observed_quality/Homoploymer_summary.txt", sep="\t")
+	# Ensure the legend is created correctly
+	handles, labels = plt.gca().get_legend_handles_labels()
+	if not handles:
+		for group in df["Group"].unique():
+			handle = plt.Line2D([0], [0], color=sns.color_palette("pastel")[0], lw=2)
+			handles.append(handle)
+			labels.append(group)
+	
+	plt.legend(handles=handles, labels=labels, title='Group')
+	plt.tight_layout()
+	plt.savefig(f"{path}/2_Observed_mismatch_proportion.{format}", format=format, dpi=300)
+	plt.close()
+
+def plot_observe_homo(format='svg', path='Giraffe_Results/2_Observed_quality'):
+	# Load data
+	df = process_in_chunks("Giraffe_Results/2_Observed_quality/Homoploymer_summary.txt")
 	df["Accuracy"] = df["Accuracy"] * 100
 
-	min_2 = df["Accuracy"].min()
-	if min_2 >= 75:
-		homo_scale = [75,100]
-		homo_breaks = [i for i in range(75, 101, 5)]
-	elif min_2 >= 50:
-		homo_scale = [50,100]
-		homo_breaks = [i for i in range(50, 101, 5)]
-	elif min_2 >= 25:
-		homo_scale = [25,100]
-		homo_breaks = [i for i in range(25, 101, 5)]
-	else:
-		homo_scale = [0,100]
-		homo_breaks = [i for i in range(0, 101, 5)]
+	# Determine scale and breaks for y-axis based on minimum accuracy
+	min_acc = df["Accuracy"].min()
+	max_acc = df["Accuracy"].max()
 
-	Homo = (
-		ggplot(df, aes(x="Base",y="Accuracy", fill="Group", color="Group", group="Group")) + 
-			geom_line(size=1, alpha=.8) + 
-			geom_point(size=3, color="black", alpha=.8) +
-		    scale_y_continuous(name="Accuracy of homopolymer identification (%)", 
-		    	limits=homo_scale, breaks =homo_breaks) +
-		    xlab("Base") + theme_classic() + 
-		    theme(axis_text=element_text(size=12, color="black"),
-		          axis_title_y=element_text(size=12, color="black"),
-		          axis_title_x=element_blank(),
-		          legend_text = element_text(size=12, color="black"),
-		          legend_title = element_blank(),
-		          legend_position = "right")
-		    )
+	min_value = int((min_acc//10) * 10)
+	max_value = int((max_acc//10) * 10 + 10)
+	homo_scale = [min_value, max_value]
 
-	Homo.save(filename = "3_Homoploymer_summary.pdf", 
-		width=8, height=6, dpi=300, path="Giraffe_Results/2_Observed_quality/")
+	dif = max_value - min_value
 
-def plot_GC_bias():
-	df=pd.read_csv("Giraffe_Results/3_GC_bias/Bin_distribution.txt", sep="\t")
-	accurac_scale = [0,100]
-	accurac_break = [i for i in range(0, 101, 10)]
-
-	distribution_len=(
-		ggplot(df, aes(x="GC_content", y="Number")) + 
-			geom_line(size=1.5, color="#96D1E8", alpha=.3) + 
-			geom_point(size=1.5, fill="#96D1E8", color="black") +
-            scale_x_continuous(name = "GC content (%)", 
-            	limits=accurac_scale, breaks =accurac_break) +
-            scale_y_continuous(name="Number of bins") + theme_classic() +
-            theme(axis_text=element_text(size=12, color="black"),
-                  axis_title=element_text(size=12, color="black"))
-            )
-
-	df1=pd.read_csv("Giraffe_Results/3_GC_bias/Relationship_normalization.txt", sep="\t")
-
-	dif = df1["GC_content"].max() - df1["GC_content"].min()
-	if dif <= 15:
-		gc_breaks = [i for i in range(0, 101, 1)]
+	if dif <= 10:
+		homo_breaks = [i for i in range(min_value, max_value+1, 1)]
+	elif dif <= 20:
+		homo_breaks = [i for i in range(min_value, max_value+1, 2)]
 	elif dif <= 30:
-		gc_breaks = [i for i in range(0, 101, 2)]
+		homo_breaks = [i for i in range(min_value, max_value+1, 5)]
+	elif dif <= 40:
+		homo_breaks = [i for i in range(min_value, max_value+1, 5)]
 	elif dif <= 50:
-		gc_breaks = [i for i in range(0, 101, 5)]
+		homo_breaks = [i for i in range(min_value, max_value+1, 5)]
+	elif dif <= 60:
+		homo_breaks = [i for i in range(min_value, max_value+1, 5)]
+	elif dif <= 70:
+		homo_breaks = [i for i in range(min_value, max_value+1, 5)]
+	elif dif <= 80:
+		homo_breaks = [i for i in range(min_value, max_value+1, 5)]
+	elif dif <= 90:
+		homo_breaks = [i for i in range(min_value, max_value+1, 5)]
 	else:
-		gc_breaks = [i for i in range(0, 101, 10)]
+		homo_breaks = [i for i in range(min_value, max_value+1, 10)]
 
-	GC_bias=(
-		ggplot(df1, aes(x="GC_content", y="Normalized_depth", 
-			group="Group", fill="Group", color="Group")) + 
-			geom_hline(aes(yintercept=1), color="grey", linetype="dotted") + 
-			geom_line(size=1.5, alpha=.3) + 
-			geom_point(size=1.5,color="black") +
-			scale_y_continuous(name="Normalized depth", 
-				limits=[0, 2], breaks=np.arange(0, 2.1, 0.2)) +
-			theme_classic() + 
-			scale_x_continuous(name="GC content (%)", breaks=gc_breaks) +
-            theme(axis_text=element_text(size=12, color="black"),
-                  axis_title=element_text(size=12, color="black"),
-                  legend_title = element_blank(),
-                  legend_text = element_text(size=12, color="black"),
-                  legend_position = "bottom"
-                  )
-            )
-
-	distribution_len.save(filename = "1_Bin_distribution.pdf", 
-		width=8, height=3, dpi=300, path="Giraffe_Results/3_GC_bias")
-	GC_bias.save(filename = "2_Relationship_normalization.pdf", 
-		width=8, height=5, dpi=300, path="Giraffe_Results/3_GC_bias")
-
-def plot_modi_bin():
-	system('cat Giraffe_Results/4_Regional_modification/*bed | grep -v -w "nan" \
-		> Giraffe_Results/4_Regional_modification/plot.txt')
-
-	df=pd.read_csv("Giraffe_Results/4_Regional_modification/plot.txt", 
-		sep="\t", names=["ID", "Value", "Group"])
+	# Create the plot
+	plt.figure(figsize=(8, 6))
+	sns.lineplot(data=df, x='Base', y='Accuracy', hue='Group', linewidth=1.5,
+		markers=True, dashes=False, palette = "Set2", alpha=0.6, legend=False)
+	sns.scatterplot(data=df, x='Base',y='Accuracy', hue='Group', 
+		palette = "Set2", s=50, edgecolor="black")
 	
-	df=df.dropna()
-	df["Value"] = df["Value"]*100
-	diff = df["Value"].max() - df["Value"].min()
+	# Customize plot
+	plt.ylim(homo_scale)
+	plt.yticks(homo_breaks)
+	plt.ylabel('Accuracy of homopolymer identification (%)')
+	plt.xlabel('Base')
 
-	if diff <= 20:
-		Breaks = [i for i in range(0, 101, 2)]
-	elif diff <= 50:
-		Breaks = [i for i in range(0, 101, 5)]
-	else:
-		Breaks = [i for i in range(0, 101, 10)]
+	# Save plot
+	output_path = f"{path}/3_Homoploymer_summary.{format}"
+	plt.savefig(output_path, format=format, dpi=300, bbox_inches='tight')
+	plt.close()
 
-	Bin_box = (
-		ggplot(df, aes(y="Value", x="Group", fill="Group")) + 
-			geom_point(position = position_jitter(width=0.15), size = 0.5,alpha = 0.1) + 
-			geom_boxplot(width=0.25,  alpha=0.5, outlier_shape="") +
-			geom_violin(position = position_nudge(x = .2), alpha = 0.7, adjust = 0.5, style="right") + 
-			coord_flip() +
-			scale_y_continuous(name="Modification proportion (%)",
-				breaks=Breaks) + xlab("") + theme_classic() +
-			theme(axis_text=element_text(size=12, color="black"),
-                  axis_title=element_text(size=12, color="black"),
-                  legend_position = 'none')
-		)
+def plot_GC_bias(input_binsize, format='svg', path='Giraffe_Results/3_GC_bias'):
+	# sns.set_style("whitegrid")
+	# Load the first dataset
+	df = pd.read_csv("Giraffe_Results/3_GC_bias/Bin_distribution.txt", sep="\t")
+	accuracy_scale = [0, 100]
+	accuracy_breaks = [i for i in range(0, 101, 10)]
 
 
-	Bin_box.save(filename = "1_Regional_modification.pdf", 
-		width=8, height=6, dpi=300, path="Giraffe_Results/4_Regional_modification")
+	# Plot distribution length
+	plt.figure(figsize=(8, 5))
 
-	system("rm Giraffe_Results/4_Regional_modification/plot.txt")
+	sns.lineplot(data=df, x="GC_content", y="Number", color="#96D1E8", linewidth=1.5, alpha=0.3)
+	sns.scatterplot(data=df, x="GC_content", y="Number", color="#96D1E8", edgecolor="black", s=15)
+
+	plt.xlim(accuracy_scale)
+	plt.xticks(accuracy_breaks)
+	plt.xlabel("GC content (%)")
+	plt.ylabel(f"Number of bins (bin size = {input_binsize} bp)")
+	plt.grid(False)
+	plt.savefig(f"{path}/1_Bin_distribution.{format}", dpi=300)
+	plt.close()
+
+	# Load the second dataset
+	df1 = pd.read_csv("Giraffe_Results/3_GC_bias/Relationship_normalization.txt", sep="\t")
+
+	# Plot GC bias
+	plt.figure(figsize=(8, 5))
+	sns.lineplot(data=df1, x="GC_content", y="Normalized_depth", hue="Group", 
+	palette = "Set2", linewidth=1.5, alpha=.6)
+	sns.scatterplot(data=df1, x="GC_content", y="Normalized_depth", hue="Group",
+	palette = "Set2", edgecolor="black", s=20, legend=False)
+
+	plt.axhline(1, color="grey", linestyle="dotted")
+	plt.ylim(0, 2)
+
+	depth_breaks = (0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0)
+	plt.yticks(depth_breaks)
+
+	plt.xlabel("GC content (%)")
+	plt.ylabel("Normalized depth")
+	plt.grid(False)
+	plt.savefig(f"{path}/2_Relationship_normalization.{format}", dpi=300)
+	plt.close()
+
+def plot_modi_bin(format="svg", path="Giraffe_Results/4_Regional_modification"):
+
+    df = pd.read_csv("Giraffe_Results/4_Regional_modification/Regional_methylation_proportion.txt", sep="\t", names=["ID", "Value", "Group"])
+    df["Value"] = df["Value"] * 100
+
+    # sns.set(style="whitegrid")
+    plt.figure(figsize=(20, 5))
+
+    # Violin plot
+    sns.violinplot(data=df, y="Group", x="Value",
+     width=0.5, alpha=0.7, inner="box", split=True,
+     inner_kws=dict(box_width=8, whis_width=2, color=".8"))
+
+    methyl_scale = (0,100)
+    methyl_breaks = [i for i in range(0, 101, 10)]
+
+    plt.xlim(methyl_scale)
+    plt.xticks(methyl_breaks)
+    plt.xlabel("Methylation proportion (%)")
+    plt.ylabel("")
+    plt.yticks(fontsize=12, color='black')
+    plt.legend([],[], frameon=False)  # Remove legend
+
+    plt.savefig(f"{path}/1_Regional_modification.{format}", dpi=300)
+    plt.close()
