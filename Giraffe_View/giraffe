@@ -463,10 +463,10 @@ def total(args):
 
 if __name__ == '__main__':
 
-	version = "0.2.0"
+	version = "0.2.2"
 
 	parser = argparse.ArgumentParser(description="",
-		usage="\n   %(prog)s [subcommands] [options]							# Users can execute subcommands as needed to perform specific tasks."
+		usage="\n   %(prog)s [subcommands] [options]							    # Users can execute subcommands as needed to perform specific tasks."
 			  "\n   %(prog)s --read <read table> --ref <reference> --cpu <number of processes or threads>			# Running function of estimate, observe, and gcbias with FASTQ reads."
 			  "\n   %(prog)s --read <unaligned SAM/BAM table> --ref <reference> --cpu <number of processes or threads>	# Running function of estimate, observe, and gcbias with unaligned SAM/BAM reads."
               "\n\nexample for table (sample_ID data_type file_path):\n"
@@ -477,7 +477,7 @@ if __name__ == '__main__':
 			  "\n\nnote:\n"
 			  "   version: " + str(version) + "\n"
 		      "   data_type: ONT, ONT_RNA, or Pacbio\n"
-		      "   For more deatails, please refer to the documentation: https://giraffe-documentation.readthedocs.io/en/latest.")
+		      "   For more details, please refer to the documentation: https://giraffe-documentation.readthedocs.io/en/latest.")
 	
 	parser.add_argument("--read", type=str, metavar="", required=False, help="table of FASTQ read files")
 	parser.add_argument("--unaligned", type=str, metavar="", required=False, help="table of the unaligned SAM/BAM files")
@@ -503,7 +503,7 @@ if __name__ == '__main__':
 		      "\n\nnote:\n"
 		      "   version: " + str(version) + "\n"
 		      "   data_type: ONT, ONT_RNA, or Pacbio\n"
-		      "   For more deatails, please refer to the documentation: https://giraffe-documentation.readthedocs.io/en/latest.")
+		      "   For more details, please refer to the documentation: https://giraffe-documentation.readthedocs.io/en/latest.")
 
 	estimated_parser.add_argument("--read", type=str, metavar="", required=False, help="table of FASTQ read files")
 	estimated_parser.add_argument("--unaligned", type=str, metavar="", required=False, help="table of the unaligned SAM/BAM files")
@@ -522,7 +522,7 @@ if __name__ == '__main__':
               		      "\n\nnote:\n"
 		      "   version: " + str(version) + "\n"
 		      "   data_type: ONT, ONT_RNA, or Pacbio\n"
-		      "   For more deatails, please refer to the documentation: https://giraffe-documentation.readthedocs.io/en/latest.")
+		      "   For more details, please refer to the documentation: https://giraffe-documentation.readthedocs.io/en/latest.")
               
 	observed_parser.add_argument("--read", type=str, metavar="", required=False, help="table of the FASTQ read files")
 	observed_parser.add_argument("--aligned", type=str, metavar="", required=False, help="table of the aligned SAM/BAM files")
@@ -541,7 +541,7 @@ if __name__ == '__main__':
 		"\n\nnote:\n"
 		"   version: " + str(version) + "\n"
 		"   data_type: ONT, ONT_RNA, or Pacbio\n"
-		"   For more deatails, please refer to the documentation: https://giraffe-documentation.readthedocs.io/en/latest.")
+		"   For more details, please refer to the documentation: https://giraffe-documentation.readthedocs.io/en/latest.")
 	GC_bias_parser.add_argument("--ref", type=str, metavar="", required=True, help="reference file")
 	GC_bias_parser.add_argument("--aligned", type=str, metavar="", required=True, help="table of sorted SAM/BAM files")
 	GC_bias_parser.add_argument("--binsize", type=int, metavar="", required=False, help="reference will be split into bins of the specified size (default:1000)", default=1000)
@@ -563,7 +563,7 @@ if __name__ == '__main__':
 		"\n\nnote:\n"
 		"   version: " + str(version) + "\n"
 		"   data_type: ONT, ONT_RNA, or Pacbio\n"
-		"   For more deatails, please refer to the documentation: https://giraffe-documentation.readthedocs.io/en/latest.")
+		"   For more details, please refer to the documentation: https://giraffe-documentation.readthedocs.io/en/latest.")
 
 
 	methylation_parser.add_argument("--methyl", type=str, metavar="", required=True, help="table of methylation files")

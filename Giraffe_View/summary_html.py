@@ -241,7 +241,7 @@ def generate_giraffe_html(giraffe_data, summary_figures, output_file):
                    f.write(f"<img src='{figure}' alt='{figure_title}' style='width: 1000px; height: auto;'>\n")
                    f.write(f"<p style='font-size:14px;'>Note: If the scale of GC content is not suitable, please use the renormalization_sequencing_bias for normalzation and giraffe_plot for plotting.</p>\n")
                    f.write(f"<p style='font-size:14px;'>renormalization_sequencing_bias -i S1_distribution.txt -l 30 -r 60 -o S1.txt </p>\n")
-                   f.write(f"<p style='font-size:14px;'>giraffe_plot gcbias --input new_gcbias.txt --x_min 20 --x_max 50 --x_gap 2</pre>\n")
+                   f.write(f"<p style='font-size:14px;'>giraffe_plot gcbias --input new_gcbias.txt --x_min 30 --x_max 60 --x_gap 2</pre>\n")
                    f.write(f"</div>\n")
                 
                 else:
