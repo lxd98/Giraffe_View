@@ -463,7 +463,7 @@ def total(args):
 
 if __name__ == '__main__':
 
-	version = "0.2.2"
+	version = "0.2.3"
 
 	parser = argparse.ArgumentParser(description="",
 		usage="\n   %(prog)s [subcommands] [options]							    # Users can execute subcommands as needed to perform specific tasks."

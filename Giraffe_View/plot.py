@@ -17,7 +17,7 @@ def plot_estimate(format='svg', path='Giraffe_Results/1_Estimated_quality'):
 	min_1 = df["Accuracy"].min()
 	if min_1 >= 95:
 		acc_scale = [95, 100]
-		acc_breaks = [i for i in range(95, 101, 0.5)]
+		acc_breaks = [i for i in range(95, 101, 1)]
 	elif min_1 >= 90:
 		acc_scale = [90, 100]
 		acc_breaks = [i for i in range(90, 101, 1)]
@@ -81,7 +81,7 @@ def plot_estimate(format='svg', path='Giraffe_Results/1_Estimated_quality'):
 	ave = df["Length"].mean()
 	if ave <= 1:
 		len_scale = [0, 5]
-		len_breaks = [i for i in range(0, 6, 0.5)]
+		len_breaks = [i for i in range(0, 6, 1)]
 	elif ave <= 5:
 		len_scale = [0, 10]
 		len_breaks = [i for i in range(0, 11, 1)]
@@ -123,7 +123,7 @@ def plot_observe_acc(format='svg', path='Giraffe_Results/2_Observed_quality'):
 
 	if min_1 >= 95:
 		acc_scale = [95, 100]
-		acc_breaks = [i for i in range(95, 101, 0.5)]
+		acc_breaks = [i for i in range(95, 101, 1)]
 	elif min_1 >= 90:
 		acc_scale = [90, 100]
 		acc_breaks = [i for i in range(90, 101, 1)]
@@ -187,7 +187,7 @@ def plot_observe_acc(format='svg', path='Giraffe_Results/2_Observed_quality'):
 
 	if max_4 <= 5:
 		mis_scale = [0, 5]
-		mis_breaks = [i for i in range(0, 6, 0.5)]
+		mis_breaks = [i for i in range(0, 6, 1)]
 	elif max_4 <= 10:
 		mis_scale = [0, 10]
 		mis_breaks = [i for i in range(0, 11, 1)]

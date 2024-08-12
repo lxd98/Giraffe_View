@@ -129,7 +129,7 @@ def plot_GC_bias(input_file, x_min, x_max, x_gap):
     plt.close()
 
 if __name__ == '__main__':
-    version = "0.2.2"
+    version = "0.2.3"
     parser = argparse.ArgumentParser(description="",
         usage="\n   # Users can replot the figures by rescaling the regions along the x-axis or y-axis.\n"
               "\n   %(prog)s estimate_acc --input Estimated_information.txt --x_min 50 --x_max 100 --x_gap 10    # For estimated read accuracy!"
