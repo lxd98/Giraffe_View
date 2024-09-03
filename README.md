@@ -149,5 +149,6 @@ The one-command pattern will generate a summary in [HTML](https://lxd98.github.i
 
 For more details about the usage of Giraffe and results profiling, please refer to the [document](https://giraffe-documentation.readthedocs.io/en/latest).
 
+# Citation
 
-
+Liu, X., Shao, Y., Guo, Z., Ni, Y., Sun, X., Leung, A. Y. H., & Li, R. (2024). Giraffe: A tool for comprehensive processing and visualization of multiple long-read sequencing data. *Computational and Structural Biotechnology Journal, 23,* 3241-3246. https://doi.org/10.1016/j.csbj.2024.08.003
